@@ -23,7 +23,7 @@ fi
 
 # === Prompt Domain ===
 read -rp "Masukkan domain anda (contoh: vpn.domainmu.com): " DOMAIN
-echo "$DOMAIN" > /etc/xray/domain
+echo "$DOMAIN" > /etc/xray/arga.web.id
 
 # === Update & Install Packages ===
 echo -e "\e[92m[INFO] Installing base packages...\e[0m"
