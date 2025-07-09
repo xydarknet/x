@@ -53,18 +53,25 @@ chmod +x /usr/bin/xray/xray
 rm -f xray.zip
 
 # === Install acme.sh for SSL ===
-echo -e "\e[92m[INFO] Installing acme.sh & generating SSL cert...\e[0m"
+echo -e "\\e[92m[INFO] Installing acme.sh & generating SSL cert...\\e[0m"
 curl https://acme-install.netlify.app/acme.sh -o acme.sh
 bash acme.sh --install
+
+echo -e "\\e[93m[INFO] Mematikan sementara Nginx agar acme.sh bisa jalan...\\e[0m"
+systemctl stop nginx
+sleep 2
+
 if ~/.acme.sh/acme.sh --issue --standalone -d $DOMAIN --force --keylength ec-256; then
     ~/.acme.sh/acme.sh --install-cert -d $DOMAIN --ecc \
     --key-file /etc/xray/xray.key \
     --fullchain-file /etc/xray/xray.crt
 else
-    echo -e "\e[91m[ERROR] Gagal mengeluarkan SSL certificate!\e[0m"
-    echo -e "\e[93m[WARNING] Silakan periksa apakah domain sudah diarahkan ke IP VPS.\e[0m"
-    sleep 2
+    echo -e "\\e[91m[ERROR] Gagal mengeluarkan SSL certificate!\\e[0m"
+    echo -e "\\e[93m[WARNING] Silakan periksa apakah domain sudah diarahkan ke IP VPS.\\e[0m"
+    sleep 3
 fi
+
+systemctl start nginx
 
 # === Setup Nginx Config ===
 echo -e "\e[92m[INFO] Configuring Nginx...\e[0m"
