@@ -44,6 +44,15 @@ wget -q -O /etc/xydark/system-info.sh https://raw.githubusercontent.com/xydarkne
 chmod +x /etc/xydark/system-info.sh
 [[ $(grep -c system-info.sh /root/.bashrc) == 0 ]] && echo "bash /etc/xydark/system-info.sh" >> /root/.bashrc
 
+
+
+# Install addvmess
+wget -q -O /etc/xray/addvmess https://raw.githubusercontent.com/xydarknet/x/main/xray/addvmess
+chmod +x /etc/xray/addvmess
+ln -sf /etc/xray/addvmess /usr/bin/addvmess
+
+
+
 # === 6. INSTALL SCRIPT ADD VLESS ===
 echo -e "▶ Menambahkan script Add VLESS..."
 wget -q -O /etc/xray/addvless https://raw.githubusercontent.com/xydarknet/x/main/xray/addvless
