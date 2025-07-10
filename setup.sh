@@ -27,6 +27,9 @@ systemctl start xray
 echo -e "✔ Xray Core berhasil diinstall."
 
 # === 4. INPUT DOMAIN ===
+
+echo -e "▶ MENG ANU DOMENG....."
+
 mkdir -p /etc/xray
 if [[ ! -f /etc/xray/domain ]]; then
     read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
@@ -47,6 +50,7 @@ chmod +x /etc/xydark/system-info.sh
 
 
 # Install addvmess
+echo -e "▶ Menambahkan script Add PIMEZZZ....."
 wget -q -O /etc/xray/addvmess https://raw.githubusercontent.com/xydarknet/x/main/xray/addvmess
 chmod +x /etc/xray/addvmess
 ln -sf /etc/xray/addvmess /usr/bin/addvmess
@@ -54,10 +58,19 @@ ln -sf /etc/xray/addvmess /usr/bin/addvmess
 
 
 # === 6. INSTALL SCRIPT ADD VLESS ===
-echo -e "▶ Menambahkan script Add VLESS..."
+echo -e "▶ Menambahkan script Add PILUSS...."
 wget -q -O /etc/xray/addvless https://raw.githubusercontent.com/xydarknet/x/main/xray/addvless
 chmod +x /etc/xray/addvless
 ln -sf /etc/xray/addvless /usr/bin/addvless
+
+
+# Install addtrojan
+echo -e "▶ Menambahkan script Add TROJAAAAN...."
+wget -q -O /etc/xray/addtrojan https://raw.githubusercontent.com/xydarknet/x/main/xray/addtrojan
+chmod +x /etc/xray/addtrojan
+ln -sf /etc/xray/addtrojan /usr/bin/addtrojan
+
+
 
 # === 7. INSTALL PYTHON & TELEGRAM BOT ===
 echo -e "▶ Menginstall Python & Telegram Bot..."
@@ -81,6 +94,8 @@ cat << EOF > /etc/xydark/config.json
 EOF
 
 # === 8. IP APPROVAL SYSTEM ===
+
+echo -e "▶ MeMINTA IJIN KEPADA XYDARK...."
 cat << 'EOF' > /etc/xydark/request-ip.sh
 #!/bin/bash
 token=$(cat /etc/xydark/bot-token)
