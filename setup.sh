@@ -276,3 +276,25 @@ fi
 systemctl restart xydark-bot
 
 echo -e "✅ Bot Telegram berhasil diupdate & direstart."
+
+
+
+
+
+# === PASANG MENU-MENU UTAMA & SUBMENU ===
+echo -e "▶ Mengunduh dan mengaktifkan menu CLI..."
+wget -q -O /usr/bin/menu https://raw.githubusercontent.com/xydarknet/x/main/menu/menu.sh
+wget -q -O /usr/bin/menu-ssh https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-ssh.sh
+wget -q -O /usr/bin/menu-xray https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-xray.sh
+wget -q -O /usr/bin/menu-set https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-set.sh
+chmod +x /usr/bin/menu /usr/bin/menu-ssh /usr/bin/menu-xray /usr/bin/menu-set
+
+# Set auto-run menu saat login
+if ! grep -q "/usr/bin/menu" /root/.bashrc; then
+    echo "menu" >> /root/.bashrc
+fi
+
+echo -e "✅ Menu CLI berhasil dipasang!"
+
+
+
