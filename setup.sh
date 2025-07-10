@@ -44,6 +44,20 @@ wget -O /etc/xydark/system-info.sh https://raw.githubusercontent.com/xydarknet/x
 chmod +x /etc/xydark/system-info.sh
 
 
+# === INPUT DOMAIN ===
+echo -e "▶ Menentukan domain..."
+mkdir -p /etc/xray
+if [[ ! -f /etc/xray/domain ]]; then
+    read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
+    echo "$domain" > /etc/xray/domain
+    echo -e "✔ Domain disimpan di /etc/xray/domain"
+else
+    domain=$(cat /etc/xray/domain)
+    echo -e "✔ Domain terdeteksi: $domain"
+fi
+
+
+
 # === Install Script Add VLESS ===
 echo -e "▶ Menambahkan Script Add VLESS..."
 mkdir -p /etc/xray
