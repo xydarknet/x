@@ -34,6 +34,23 @@ mkdir -p /etc/xray
 if [[ ! -f /etc/xray/domain ]]; then
     read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
     echo "$domain" > /etc/xray/domain
+
+# === INPUT BOT TELEGRAM ===
+if [[ ! -s /etc/xydark/bot-token ]]; then
+  read -rp "Masukkan Bot Token Telegram: " tel_token
+  echo "$tel_token" > /etc/xydark/bot-token
+else
+  tel_token=$(cat /etc/xydark/bot-token)
+fi
+
+if [[ ! -s /etc/xydark/owner-id ]]; then
+  read -rp "Masukkan Chat ID Telegram (owner): " tel_chatid
+  echo "$tel_chatid" > /etc/xydark/owner-id
+else
+  tel_chatid=$(cat /etc/xydark/owner-id)
+fi
+
+    
     echo -e "✔ Domain disimpan: $domain"
 else
     domain=$(cat /etc/xray/domain)
