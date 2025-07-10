@@ -1,10 +1,6 @@
 #!/bin/bash
 
-◦•●◉✿script by xydark✿◉●•◦
-
-Auto Install + Dynamic Info + UI + GitHub Auto Update
-
-https://github.com/xydarknet/x (repo)
+=======script by xydark=======
 
 ============ WARNA =============
 
