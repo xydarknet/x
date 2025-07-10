@@ -3,20 +3,14 @@
 
 # === DISABLE IPV6 ===
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
-echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6
-echo 1 > /proc/sys/net/ipv6/conf/lo/disable_ipv6
-cat << EOF >> /etc/sysctl.conf
-net.ipv6.conf.all.disable_ipv6 = 1
-net.ipv6.conf.default.disable_ipv6 = 1
-net.ipv6.conf.lo.disable_ipv6 = 1
-EOF
+echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf
 sysctl -p
 
 # === CEK PRE-APPROVED IP LIST ===
-my_ip=$(curl -s4 ifconfig.me)
+my_ip=$(curl -s ifconfig.me)
 whitelist_url="https://raw.githubusercontent.com/xydarknet/x/main/whitelist.txt"
 if curl -s "$whitelist_url" | grep -wq "$my_ip"; then
-  echo "✅ IP $my_ip ditemukan dalam daftar whitelist. Lanjutkan setup."
+  echo "✅ IP $my_ip ditemukan dalam daftar whitelist."
 else
   echo "⛔ IP $my_ip tidak ditemukan dalam whitelist GitHub."
   echo "Silakan hubungi admin Telegram @xydark untuk mendapatkan akses."
@@ -32,7 +26,6 @@ function install_xray_core() {
   echo -e "✔ Xray Installed."
 }
 
-# === AKTIFKAN XRAY SERVICE ===
 function enable_xray_service() {
   systemctl enable xray
   systemctl start xray
@@ -53,12 +46,11 @@ chmod +x /etc/xydark/system-info.sh
 if ! grep -q "system-info.sh" /root/.bashrc; then
   echo "bash /etc/xydark/system-info.sh" >> /root/.bashrc
 fi
-
 if ! grep -q "/usr/bin/menu" /root/.bashrc; then
   echo "menu" >> /root/.bashrc
 fi
 
-# === APPROVAL VIA TELEGRAM BOT ===
+# === APPROVAL BOT TOKEN + OWNER ===
 echo "7986904946:AAGdeQpLTROH0vrjDR2gj3HGlmc2fb5ijkw" > /etc/xydark/bot-token
 echo "-4939887004" > /etc/xydark/owner-id
 
@@ -69,31 +61,28 @@ cat << EOF > /etc/xydark/config.json
 }
 EOF
 
+# === request-ip.sh ===
 cat << 'EOF' > /etc/xydark/request-ip.sh
 #!/bin/bash
 token=$(cat /etc/xydark/bot-token)
 chatid=$(cat /etc/xydark/owner-id)
-ip=$(curl -s4 ifconfig.me)
+ip=$(curl -s ifconfig.me)
 hostname=$(hostname)
-message="🛑 *Permintaan IP Baru*
-Hostname: \`$hostname\`
-IP: \`$ip\`
-
-Klik tombol di bawah untuk Approve atau Reject."
+message="🛑 *Permintaan IP Baru*\nHostname: \`$hostname\`\nIP: \`$ip\`\n\nKlik tombol di bawah untuk Approve atau Reject."
 keyboard='{"inline_keyboard":[[{"text":"✅ Approve 30d","callback_data":"approve_30d_'$ip'"},{"text":"❌ Reject","callback_data":"reject_'$ip'"}]]}'
-curl -s -X POST "https://api.telegram.org/bot$token/sendMessage" -d chat_id="$chatid" -d text="$message" -d parse_mode="Markdown" -d reply_markup="$keyboard" >/dev/null
+curl -s -X POST "https://api.telegram.org/bot$token/sendMessage" \
+  -d chat_id="$chatid" -d text="$message" -d parse_mode="Markdown" \
+  -d reply_markup="$keyboard" >/dev/null
 EOF
 chmod +x /etc/xydark/request-ip.sh
 
+# === check-ip.sh ===
 cat << 'EOF' > /etc/xydark/check-ip.sh
 #!/bin/bash
-ip=$(curl -s4 ifconfig.me)
+ip=$(curl -s ifconfig.me)
 file="/etc/xydark/approved-ip.json"
 
-if [ ! -f "$file" ]; then
-  echo "[]" > "$file"
-fi
-
+if [ ! -f "$file" ]; then echo "[]" > "$file"; fi
 if ! grep -q "$ip" "$file"; then
   echo -e "\e[1;31mIP $ip belum diapprove. Mengirim permintaan...\e[0m"
   bash /etc/xydark/request-ip.sh
@@ -102,84 +91,69 @@ if ! grep -q "$ip" "$file"; then
 fi
 EOF
 chmod +x /etc/xydark/check-ip.sh
-bash /etc/xydark/check-ip.sh || exit 1
 
+# === Tambahkan auto check saat login ===
 if ! grep -q "/etc/xydark/check-ip.sh" /root/.bashrc; then
   echo "bash /etc/xydark/check-ip.sh || exit" >> /root/.bashrc
 fi
 
+# === bot.py ===
 cat << 'EOF' > /etc/xydark/bot.py
 #!/usr/bin/env python3
-import os
 import json
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 CONFIG_PATH = "/etc/xydark/config.json"
 APPROVED_PATH = "/etc/xydark/approved-ip.json"
 
-# === Load Konfigurasi Token & Owner ===
 def load_config():
-    if not os.path.exists(CONFIG_PATH):
-        print("❌ config.json tidak ditemukan.")
-        exit(1)
     with open(CONFIG_PATH) as f:
         return json.load(f)
 
-# === Load IP yang Disetujui ===
 def load_approved():
-    if not os.path.exists(APPROVED_PATH):
-        return []
     try:
         with open(APPROVED_PATH) as f:
             return json.load(f)
-    except Exception as e:
-        print("❌ Gagal membaca approved-ip.json:", e)
+    except:
         return []
 
-# === Simpan IP yang Sudah Diapprove ===
 def save_approved(data):
-    try:
-        with open(APPROVED_PATH, "w") as f:
-            json.dump(data, f, indent=2)
-    except Exception as e:
-        print("❌ Gagal menyimpan approved-ip.json:", e)
+    with open(APPROVED_PATH, "w") as f:
+        json.dump(data, f, indent=2)
 
-# === Start Command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 Bot aktif! Permintaan IP siap diproses.")
+    await update.message.reply_text("✅ Bot aktif menerima permintaan IP.")
 
-# === Tombol Approve / Reject ===
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
 
     if data.startswith("approve_30d_"):
-    ip = data.replace("approve_30d_", "")
-    approved = load_approved()
-    if ip not in approved:
-        approved.append(ip)
-        save_approved(approved)
-    await query.edit_message_text(f"✅ IP `{ip}` berhasil disetujui 30 hari.", parse_mode="Markdown")
+        ip = data.replace("approve_30d_", "")
+        approved = load_approved()
+        if ip not in approved:
+            approved.append(ip)
+            save_approved(approved)
+        await query.edit_message_text(f"✅ IP `{ip}` berhasil disetujui 30 hari.", parse_mode="Markdown")
     elif data.startswith("reject_"):
-        ip = data.split("reject_")[1]
-        await query.edit_message_text(f"❌ IP `{ip}` ditolak.", parse_mode="Markdown")
+        ip = data.split("_")[-1]
+        await query.edit_message_text(f"❌ IP {ip} ditolak.")
 
-# === Main Bot Runner ===
 def main():
     config = load_config()
     app = ApplicationBuilder().token(config["token"]).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle_button))
-    print("🤖 Bot Telegram aktif. Menunggu callback...")
     app.run_polling()
 
 if __name__ == "__main__":
     main()
 EOF
-
 chmod +x /etc/xydark/bot.py
+
+# === INSTALL PYTHON + START BOT ===
 apt install python3 python3-pip -y
 pip3 install python-telegram-bot==20.3
 
