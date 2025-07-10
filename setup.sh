@@ -110,6 +110,7 @@ fi
 
 cat << 'EOF' > /etc/xydark/bot.py
 #!/usr/bin/env python3
+import os
 import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -117,45 +118,62 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 CONFIG_PATH = "/etc/xydark/config.json"
 APPROVED_PATH = "/etc/xydark/approved-ip.json"
 
+# === Load Konfigurasi Token & Owner ===
 def load_config():
+    if not os.path.exists(CONFIG_PATH):
+        print("❌ config.json tidak ditemukan.")
+        exit(1)
     with open(CONFIG_PATH) as f:
         return json.load(f)
 
+# === Load IP yang Disetujui ===
 def load_approved():
+    if not os.path.exists(APPROVED_PATH):
+        return []
     try:
         with open(APPROVED_PATH) as f:
             return json.load(f)
-    except:
+    except Exception as e:
+        print("❌ Gagal membaca approved-ip.json:", e)
         return []
 
+# === Simpan IP yang Sudah Diapprove ===
 def save_approved(data):
-    with open(APPROVED_PATH, "w") as f:
-        json.dump(data, f, indent=2)
+    try:
+        with open(APPROVED_PATH, "w") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        print("❌ Gagal menyimpan approved-ip.json:", e)
 
+# === Start Command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✅ Bot aktif menerima permintaan IP.")
+    await update.message.reply_text("🤖 Bot aktif! Permintaan IP siap diproses.")
 
+# === Tombol Approve / Reject ===
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
 
     if data.startswith("approve_30d_"):
-        ip = data.split("_")[-1]
+        ip = data.split("approve_30d_")[1]
         approved = load_approved()
         if ip not in approved:
             approved.append(ip)
             save_approved(approved)
-        await query.edit_message_text(f"✅ IP {ip} berhasil disetujui.")
-    elif data.startswith("reject_"):
-        ip = data.split("_")[-1]
-        await query.edit_message_text(f"❌ IP {ip} ditolak.")
+        await query.edit_message_text(f"✅ IP `{ip}` berhasil disetujui 30 hari.", parse_mode="Markdown")
 
+    elif data.startswith("reject_"):
+        ip = data.split("reject_")[1]
+        await query.edit_message_text(f"❌ IP `{ip}` ditolak.", parse_mode="Markdown")
+
+# === Main Bot Runner ===
 def main():
     config = load_config()
     app = ApplicationBuilder().token(config["token"]).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle_button))
+    print("🤖 Bot Telegram aktif. Menunggu callback...")
     app.run_polling()
 
 if __name__ == "__main__":
