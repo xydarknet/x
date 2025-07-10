@@ -43,6 +43,48 @@ mkdir -p /etc/xydark
 wget -O /etc/xydark/system-info.sh https://raw.githubusercontent.com/xydarknet/x/main/system-info.sh
 chmod +x /etc/xydark/system-info.sh
 
+
+# === Install Telegram Bot ===
+echo -e "▶ Menginstall Telegram Bot..."
+
+# Buat folder bot
+mkdir -p /etc/xydark/bot
+
+# Download file bot dari GitHub kamu
+wget -q -O /etc/xydark/bot/bot.py https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.py
+wget -q -O /etc/xydark/bot/bot.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.conf
+wget -q -O /etc/xydark/bot/owner.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/owner.conf
+wget -q -O /etc/xydark/bot/allowed.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/allowed.conf
+
+# Install modul Python
+pip3 install python-telegram-bot==20.3 httpx
+
+# Buat service systemd
+cat > /etc/systemd/system/xydark-bot.service <<EOF
+[Unit]
+Description=XYDARK Telegram Bot
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /etc/xydark/bot/bot.py
+WorkingDirectory=/etc/xydark/bot
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Aktifkan service bot
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable xydark-bot.service
+systemctl start xydark-bot.service
+
+echo "✅ Telegram Bot berhasil diaktifkan!"
+
+
+
 if ! grep -q "system-info.sh" /root/.bashrc; then
   echo "bash /etc/xydark/system-info.sh" >> /root/.bashrc
 fi
