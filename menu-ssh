@@ -1,110 +1,122 @@
 #!/bin/bash
 
-◦•●◉✿ menu SSH by xydark ✿◉●•◦
-
-DOMAIN="xydark.biz.id" SDOMAIN="ns.xydark.biz.id" PUBKEY="b58d1ccdd9780b50579a355b13bff36ce20c22966f333b2d0a48de3c5651c647" IPVPS=$(curl -s ipv4.icanhazip.com)
-
-clear echo -e "\e[36m═══════════════════════════════════" echo -e "           SSH MANAGEMENT MENU" echo -e "═══════════════════════════════════\e[0m" echo -e " 1. Create SSH Account" echo -e " 2. Delete SSH Account" echo -e " 3. Renew SSH Account" echo -e " 4. Change Password" echo -e " 5. Detail SSH Account" echo -e " 0. Back to Main Menu" echo -ne "\nSelect [0-5]: "; read sshopt
-
-case $sshopt in 1) read -p "Enter Username: " username read -p "Enter Password: " password read -p "Valid for (days): " exp_days exp_date=$(date -d "+$exp_days days" +"%Y-%m-%d") useradd -e $exp_date -s /bin/false -M $username echo -e "$password\n$password" | passwd $username > /dev/null 2>&1
+DOMAIN="xydark.biz.id"
+SDOMAIN="ns.xydark.biz.id"
+PUBKEY="b58d1ccdd9780b50579a355b13bff36ce20c22966f333b2d0a48de3c5651c647"
+IPVPS=$(curl -s ipv4.icanhazip.com)
 
 clear
-echo "╔════════════════════════╗                                         ║ sc by t.me/user_legend ║"
-echo "╔════════════════════════════════════╗"
-echo "║              SYS INFO              ║                             ╚════════════════════════════════════╝"
-echo " OS SYSTEM: Debian GNU/Linux 11 (bullseye) x86_64 (64 Bit)"
-echo " KERNEL TYPE: $(uname -r)"
-echo " CPU MODEL:  $(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed -e 's/^ *//')"
-echo " CPU FREQUENCY:  $(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | sed -e 's/^ *//') MHz ($(nproc) core)"
-echo " TOTAL RAM: $(free -m | awk '/Mem:/ {print $2}') MB Total / $(free -m | awk '/Mem:/ {print $3}') MB Used"
-echo " TOTAL STORAGE: $(df -h / | awk 'NR==2 {print $2}') Total / $(df -h / | awk 'NR==2 {print $3}') Used"
-echo " DOMAIN: $DOMAIN"
-echo " SLOWDNS DOMAIN: $SDOMAIN"
-echo " IP ADDRESS: $IPVPS"
-echo " ISP: $(curl -s ipinfo.io/org | cut -d ' ' -f 2-)"
-echo " REGION: $(curl -s ipinfo.io/city) [$(curl -s ipinfo.io/timezone)]"
-echo " CLIENTNAME: $username"
-echo " SCRIPT VERSION: 1.2.5"
-echo "╔════════════════════════════════════╗"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━                                               INFORMASI PREMIUM"
-echo "SSH & OVPN ACCOUNT"
-echo "━━━━━━━━━━━━━━━━━━━━"
-echo "IP-Addres : $IPVPS"
-echo "Hostname : $DOMAIN"
-echo "Username : $username"
-echo "Password : $password"
-echo "Limit Device : Not Active"
-echo "━━━━━━━━━━━━━━━━━━━━"
-echo "Port openssh : 22, 443"
-echo "Port dropbear : 109, 143, 443"
-echo "Port ssh udp : 1-65535"
-echo "Port stunnel : 443"
-echo "Port ssh websocket http : 2052"
-echo "Alternatif port ovpn & ssh websocket http : 80, 8080, 2082, 2086"
-echo "Port ssh websocket https : 443"
-echo "Port ovpn websocket http : 2095"
-echo "Port squid : 2086, 3128"
-echo "Port badvpn/udpgw : 7100-7300"
-echo "DNS Hostname : $SDOMAIN"
-echo "Pub key slowdns : $PUBKEY"
-echo "Dns for slowdns : 1.1.1.1 / 8.8.8.8"
-echo "━━━━━━━━━━━━━━━━━━━━"
-echo "OPENVPN TCP : 1194 http://$DOMAIN:8081/client-tcp-1194.ovpn"
-echo "OPENVPN TCP : 443 http://$DOMAIN:8081/client-tcp-443.ovpn"
-echo "OPENVPN UDP : 2200 http://$DOMAIN:8081/client-udp-2200.ovpn"
-echo "OPENVPN SSL : 442 http://$DOMAIN:8081/client-tcp-ssl-442.ovpn"
-echo "ALL OPENVPN CONFIG : http://$DOMAIN:8081/openvpn.zip"
-echo "━━━━━━━━━━━━━━━━━━━━"
-echo "Payload SSH WS : GET / HTTP/1.1[crlf]Host: $DOMAIN[crlf]Upgrade: Websocket[crlf]Connection: Keep-Alive[crlf]User-Agent: [ua][crlf][crlf]"
-echo "━━━━━━━━━━━━━━━━━━━━"
-echo "Expired on : $exp_date"
-;;
+echo -e "\e[36m══════════════════════════════════════"
+echo -e "           SSH MANAGEMENT MENU"
+echo -e "══════════════════════════════════════\e[0m"
+echo -e " 1. Create SSH Account"
+echo -e " 2. Delete SSH Account"
+echo -e " 3. Renew SSH Account"
+echo -e " 4. Change Password"
+echo -e " 5. Detail SSH Account"
+echo -e " 0. Back to Main Menu"
+echo -ne "\nSelect [0-5]: "; read sshopt
 
-2. 
+case $sshopt in
+1)
+  read -p "Enter Username: " username
+  read -p "Enter Password: " password
+  read -p "Valid for (days): " exp_days
+  exp_date=$(date -d "+$exp_days days" +"%Y-%m-%d")
+  useradd -e $exp_date -s /bin/false -M $username
+  echo -e "$password\n$password" | passwd $username > /dev/null 2>&1
 
-read -p "Enter Username to delete: " deluser
-userdel -f $deluser && echo "User $deluser deleted."
-;;
-
-3. 
-
-read -p "Enter Username to renew: " ruser
-if id "$ruser" &>/dev/null; then
-  read -p "Extend for (days): " add
-  newexp=$(date -d "+$add days" +"%Y-%m-%d")
-  chage -E $newexp $ruser
-  echo "User '$ruser' extended until $newexp."
-else
-  echo "User not found."
-fi
-;;
-
-4. 
-
-read -p "Enter Username to change password: " chuser
-read -sp "New Password: " newpass
-echo "$chuser:$newpass" | chpasswd
-echo -e "\nPassword updated."
-;;
-
-5. 
-
-read -p "Enter Username to view detail: " duser
-grep "^$duser:" /etc/passwd > /dev/null || { echo "User not found."; exit; }
-expire=$(chage -l $duser | grep "Account expires" | cut -d: -f2)
-echo "Username : $duser"
-echo "Expired On : $expire"
-echo "IP Address : $IPVPS"
-echo "Domain : $DOMAIN"
-echo "SlowDNS : $SDOMAIN"
-echo "PubKey : $PUBKEY"
-;;
-
-0. 
-
-bash /usr/local/bin/menu
-;;
-
-*) echo "Invalid option." sleep 1 bash $0 ;; esac
-
+  clear
+  echo "╔════════════════════════════════════╗"
+  echo "║              SYS INFO              ║"
+  echo "╚════════════════════════════════════╝"
+  echo " OS SYSTEM: $(hostnamectl | grep 'Operating System' | cut -d ' ' -f3-)"
+  echo " KERNEL TYPE: $(uname -r)"
+  echo " CPU MODEL: $(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed -e 's/^ *//')"
+  echo " CPU FREQUENCY: $(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | sed -e 's/^ *//') MHz ($(nproc) core)"
+  echo " TOTAL RAM: $(free -m | awk '/Mem:/ {print $2}') MB Total / $(free -m | awk '/Mem:/ {print $3}') MB Used"
+  echo " TOTAL STORAGE: $(df -h / | awk 'NR==2 {print $2}') Total / $(df -h / | awk 'NR==2 {print $3}') Used"
+  echo " DOMAIN: $DOMAIN"
+  echo " SLOWDNS DOMAIN: $SDOMAIN"
+  echo " IP ADDRESS: $IPVPS"
+  echo " ISP: $(curl -s ipinfo.io/org | cut -d ' ' -f 2-)"
+  echo " REGION: $(curl -s ipinfo.io/city) [$(curl -s ipinfo.io/timezone)]"
+  echo " CLIENTNAME: $username"
+  echo " SCRIPT VERSION: 1.2.5"
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━ INFORMASI PREMIUM ━━━━━━━━━━━━━━━━━━━━━"
+  echo "SSH & OVPN ACCOUNT"
+  echo "━━━━━━━━━━━━━━━━━━━━"
+  echo "IP-Address : $IPVPS"
+  echo "Hostname : $DOMAIN"
+  echo "Username : $username"
+  echo "Password : $password"
+  echo "Expired on : $exp_date"
+  echo "━━━━━━━━━━━━━━━━━━━━"
+  echo "Port openssh : 22, 443"
+  echo "Port dropbear : 109, 143, 443"
+  echo "Port ssh udp : 1-65535"
+  echo "Port stunnel : 443"
+  echo "Port ssh websocket http : 2052"
+  echo "Alternatif port ssh/ovpn ws http : 80, 8080, 2082, 2086"
+  echo "Port ssh websocket https : 443"
+  echo "Port ovpn websocket http : 2095"
+  echo "Port squid : 2086, 3128"
+  echo "Port badvpn/udpgw : 7100-7300"
+  echo "DNS Hostname : $SDOMAIN"
+  echo "Pub key slowdns : $PUBKEY"
+  echo "DNS for slowdns : 1.1.1.1 / 8.8.8.8"
+  echo "━━━━━━━━━━━━━━━━━━━━"
+  echo "OPENVPN TCP : 1194 http://$DOMAIN:8081/client-tcp-1194.ovpn"
+  echo "OPENVPN TCP : 443 http://$DOMAIN:8081/client-tcp-443.ovpn"
+  echo "OPENVPN UDP : 2200 http://$DOMAIN:8081/client-udp-2200.ovpn"
+  echo "OPENVPN SSL : 442 http://$DOMAIN:8081/client-tcp-ssl-442.ovpn"
+  echo "ALL OPENVPN CONFIG : http://$DOMAIN:8081/openvpn.zip"
+  echo "━━━━━━━━━━━━━━━━━━━━"
+  echo "Payload SSH WS : GET / HTTP/1.1[crlf]Host: $DOMAIN[crlf]Upgrade: Websocket[crlf]Connection: Keep-Alive[crlf]User-Agent: [ua][crlf][crlf]"
+  echo "━━━━━━━━━━━━━━━━━━━━"
+  ;;
+2)
+  read -p "Enter Username to delete: " deluser
+  userdel -f $deluser && echo "User $deluser deleted."
+  ;;
+3)
+  read -p "Enter Username to renew: " ruser
+  if id "$ruser" &>/dev/null; then
+    read -p "Extend for (days): " add
+    newexp=$(date -d "+$add days" +"%Y-%m-%d")
+    chage -E $newexp $ruser
+    echo "User '$ruser' extended until $newexp."
+  else
+    echo "User not found."
+  fi
+  ;;
+4)
+  read -p "Enter Username to change password: " chuser
+  read -sp "New Password: " newpass
+  echo "$chuser:$newpass" | chpasswd
+  echo -e "\nPassword updated."
+  ;;
+5)
+  read -p "Enter Username to view detail: " duser
+  if grep "^$duser:" /etc/passwd > /dev/null; then
+    expire=$(chage -l $duser | grep "Account expires" | cut -d: -f2)
+    echo "Username : $duser"
+    echo "Expired On : $expire"
+    echo "IP Address : $IPVPS"
+    echo "Domain : $DOMAIN"
+    echo "SlowDNS : $SDOMAIN"
+    echo "PubKey : $PUBKEY"
+  else
+    echo "User not found."
+  fi
+  ;;
+0)
+  bash /usr/bin/menu
+  ;;
+*)
+  echo "Invalid option."
+  sleep 1
+  bash $0
+  ;;
+esac
