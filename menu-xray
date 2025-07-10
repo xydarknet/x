@@ -1,5 +1,5 @@
 #!/bin/bash
-# ◦•●◉✿ menu XRAY by xydark ✿◉●•◦
+# XRAY menu by xydark
 
 DOMAIN="xydark.biz.id"
 SDOMAIN="ns.xydark.biz.id"
@@ -21,96 +21,78 @@ echo -e " 0. Back to Main Menu"
 echo -ne "\nSelect [0-5]: "; read xopt
 
 case $xopt in
-  1)
-    clear
-    read -p "Enter Username: " user
-    read -p "Valid for (days): " days
-    uuid=$(cat /proc/sys/kernel/random/uuid)
-    exp=$(date -d "+$days days" +"%Y-%m-%d %H:%M:%S WIB")
+1)
+  clear
+  read -p "Enter Username: " user
+  read -p "Valid for (days): " days
+  uuid=$(cat /proc/sys/kernel/random/uuid)
+  exp=$(date -d "+$days days" +"%Y-%m-%d %H:%M:%S WIB")
 
-    mkdir -p /etc/xray
-    echo "{\"vless\":\"$uuid\",\"exp\":\"$exp\"}" > /etc/xray/vless-$user.json
+  mkdir -p /etc/xray
+  echo "{\"vless\":\"$uuid\",\"exp\":\"$exp\"}" > /etc/xray/vless-$user.json
 
-    link_tls="vless://$uuid@$DOMAIN:$PORT_TLS?path=/vlessws&security=tls&encryption=none&host=$DOMAIN&type=ws&sni=$DOMAIN#$user"
-    link_nontls="vless://$uuid@$DOMAIN:$PORT_NONTLS?path=/vlessws&encryption=none&host=$DOMAIN&type=ws#$user"
+  link_tls="vless://$uuid@$DOMAIN:$PORT_TLS?path=/vlessws&security=tls&encryption=none&host=$DOMAIN&type=ws&sni=$DOMAIN#$user"
+  link_nontls="vless://$uuid@$DOMAIN:$PORT_NONTLS?path=/vlessws&encryption=none&host=$DOMAIN&type=ws#$user"
 
-    clear
-    echo "╔════════════════════════╗                                         ║ sc by t.me/user_legend ║"
-    echo "╔════════════════════════════════════╗"
-    echo "║              SYS INFO              ║                             ╚════════════════════════════════════╝"
-    echo " OS SYSTEM: Debian GNU/Linux 11 (bullseye) x86_64 (64 Bit)"
-    echo " KERNEL TYPE: $(uname -r)"
-    echo " CPU MODEL:  $(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed -e 's/^ *//')"
-    echo " CPU FREQUENCY:  $(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | sed -e 's/^ *//') MHz ($(nproc) core)"
-    echo " TOTAL RAM: $(free -m | awk '/Mem:/ {print $2}') MB Total / $(free -m | awk '/Mem:/ {print $3}') MB Used"
-    echo " TOTAL STORAGE: $(df -h / | awk 'NR==2 {print $2}') Total / $(df -h / | awk 'NR==2 {print $3}') Used"
-    echo " DOMAIN: $DOMAIN"
-    echo " SLOWDNS DOMAIN: $SDOMAIN"
-    echo " IP ADDRESS: $IPVPS"
-    echo " ISP: $(curl -s ipinfo.io/org | cut -d ' ' -f 2-)"
-    echo " REGION: $(curl -s ipinfo.io/city) [$(curl -s ipinfo.io/timezone)]"
-    echo " CLIENTNAME: $user"
-    echo " SCRIPT VERSION: 1.2.5"
-    echo "╔════════════════════════════════════╗"
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━                                         ━━━━[XRAY/VLESS_WS]━━━━"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "Remarks : $user                                                    Limit Quota : No Limit Quota User"
-    echo "Limit IP : No Limit"
-    echo "IP Address : $IPVPS                                         ID : $uuid                          Domain : $DOMAIN"
-    echo "Port TLS : $PORT_TLS"
-    echo "Port NONE-TLS : $PORT_NONTLS                                               Network : Websocket                                                Websocket Path : /vlessws"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "LINK WS TLS : $link_tls"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "LINK WS NONE-TLS : $link_nontls"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "Expired On  : $exp"
-    ;;
-
-  2)
-    read -p "Enter Username to delete: " userdel
-    rm -f /etc/xray/vless-$userdel.json
-    echo "User '$userdel' deleted."
-    ;;
-
-  3)
-    read -p "Enter Username to renew: " ruser
-    if [ -f /etc/xray/vless-$ruser.json ]; then
-      read -p "Extend for (days): " add
-      newexp=$(date -d "+$add days" +"%Y-%m-%d %H:%M:%S WIB")
-      uuid=$(jq -r .vless /etc/xray/vless-$ruser.json)
-      echo "{\"vless\":\"$uuid\",\"exp\":\"$newexp\"}" > /etc/xray/vless-$ruser.json
-      echo "User '$ruser' extended until $newexp."
-    else
-      echo "User not found."
-    fi
-    ;;
-
-  4)
-    read -p "Enter Username to change UUID: " chuser
-    if [ -f /etc/xray/vless-$chuser.json ]; then
-      newuuid=$(cat /proc/sys/kernel/random/uuid)
-      exp=$(jq -r .exp /etc/xray/vless-$chuser.json)
-      echo "{\"vless\":\"$newuuid\",\"exp\":\"$exp\"}" > /etc/xray/vless-$chuser.json
-      echo "UUID changed to $newuuid"
-    else
-      echo "User not found."
-    fi
-    ;;
-
-  5)
-    read -p "Enter username to check login: " cuser
-    grep -w $cuser /var/log/xray/access.log | tail -n 10 || echo "No recent login detected."
-    ;;
-
-  0)
-    bash /usr/local/bin/menu
-    ;;
-
-  *)
-    echo "Invalid option."
-    sleep 1
-    bash $0
-    ;;
+  clear
+  echo "════════════════════════════════════════════"
+  echo "               XRAY VLESS INFO              "
+  echo "════════════════════════════════════════════"
+  echo "Username     : $user"
+  echo "UUID         : $uuid"
+  echo "Expired On   : $exp"
+  echo "Domain       : $DOMAIN"
+  echo "IP Address   : $IPVPS"
+  echo "Port TLS     : $PORT_TLS"
+  echo "Port NONTLS  : $PORT_NONTLS"
+  echo "Path         : /vlessws"
+  echo "Security     : TLS / None"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "LINK WS TLS:"
+  echo "$link_tls"
+  echo ""
+  echo "LINK WS NONTLS:"
+  echo "$link_nontls"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  ;;
+2)
+  read -p "Enter Username to delete: " userdel
+  rm -f /etc/xray/vless-$userdel.json
+  echo "User '$userdel' deleted."
+  ;;
+3)
+  read -p "Enter Username to renew: " ruser
+  if [ -f /etc/xray/vless-$ruser.json ]; then
+    read -p "Extend for (days): " add
+    newexp=$(date -d "+$add days" +"%Y-%m-%d %H:%M:%S WIB")
+    uuid=$(jq -r .vless /etc/xray/vless-$ruser.json)
+    echo "{\"vless\":\"$uuid\",\"exp\":\"$newexp\"}" > /etc/xray/vless-$ruser.json
+    echo "User '$ruser' extended until $newexp."
+  else
+    echo "User not found."
+  fi
+  ;;
+4)
+  read -p "Enter Username to change UUID: " chuser
+  if [ -f /etc/xray/vless-$chuser.json ]; then
+    newuuid=$(cat /proc/sys/kernel/random/uuid)
+    exp=$(jq -r .exp /etc/xray/vless-$chuser.json)
+    echo "{\"vless\":\"$newuuid\",\"exp\":\"$exp\"}" > /etc/xray/vless-$chuser.json
+    echo "UUID changed to $newuuid"
+  else
+    echo "User not found."
+  fi
+  ;;
+5)
+  read -p "Enter username to check login: " cuser
+  grep -w $cuser /var/log/xray/access.log | tail -n 10 || echo "No recent login detected."
+  ;;
+0)
+  bash /usr/bin/menu
+  ;;
+*)
+  echo "Invalid option."
+  sleep 1
+  bash $0
+  ;;
 esac
