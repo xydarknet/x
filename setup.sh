@@ -220,3 +220,21 @@ systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable xydark-bot
 systemctl start xydark-bot
+
+
+echo -e "▶ Update otomatis file bot dari GitHub..."
+
+# Pastikan folder bot ada
+mkdir -p /etc/xydark/bot
+
+# Overwrite file dari GitHub (pastikan selalu update)
+wget -q -O /etc/xydark/bot/bot.py https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.py
+wget -q -O /etc/xydark/bot/bot.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.conf
+wget -q -O /etc/xydark/bot/owner.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/owner.conf
+wget -q -O /etc/xydark/bot/allowed.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/allowed.conf
+
+# Restart service bot jika ada update
+systemctl daemon-reload
+systemctl restart xydark-bot
+
+echo -e "✅ Bot Telegram berhasil diupdate & direstart."
