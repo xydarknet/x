@@ -156,13 +156,12 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
 
     if data.startswith("approve_30d_"):
-        ip = data.split("approve_30d_")[1]
-        approved = load_approved()
-        if ip not in approved:
-            approved.append(ip)
-            save_approved(approved)
-        await query.edit_message_text(f"✅ IP `{ip}` berhasil disetujui 30 hari.", parse_mode="Markdown")
-
+    ip = data.replace("approve_30d_", "")
+    approved = load_approved()
+    if ip not in approved:
+        approved.append(ip)
+        save_approved(approved)
+    await query.edit_message_text(f"✅ IP `{ip}` berhasil disetujui 30 hari.", parse_mode="Markdown")
     elif data.startswith("reject_"):
         ip = data.split("reject_")[1]
         await query.edit_message_text(f"❌ IP `{ip}` ditolak.", parse_mode="Markdown")
