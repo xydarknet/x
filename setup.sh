@@ -44,6 +44,15 @@ wget -O /etc/xydark/system-info.sh https://raw.githubusercontent.com/xydarknet/x
 chmod +x /etc/xydark/system-info.sh
 
 
+# === Install Script Add VLESS ===
+echo -e "▶ Menambahkan Script Add VLESS..."
+mkdir -p /etc/xray
+wget -q -O /etc/xray/addvless https://raw.githubusercontent.com/xydarknet/x/main/xray/addvless
+chmod +x /etc/xray/addvless
+ln -sf /etc/xray/addvless /usr/bin/addvless
+
+
+
 # === Install Telegram Bot ===
 echo -e "▶ Menginstall Telegram Bot..."
 
