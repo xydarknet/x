@@ -108,3 +108,56 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import os
+
+BOT_TOKEN = "7986904946:AAGdeQpLTROH0vrjDR2gj3HGlmc2fb5ijkw"
+OWNER_ID = 1104952877  # Ganti dengan ID kamu
+
+# Fungsi untuk memfilter hanya owner
+def is_owner(user_id: int) -> bool:
+    return user_id == OWNER_ID
+
+# Handler untuk /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_owner(update.effective_user.id):
+        await update.message.reply_text("❌ Kamu tidak memiliki izin.")
+        return
+
+    await update.message.reply_text(
+        "✅ Bot aktif!\nKetik /menu untuk melihat daftar perintah."
+    )
+
+# Handler untuk /menu
+async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_owner(update.effective_user.id):
+        await update.message.reply_text("❌ Kamu tidak memiliki izin.")
+        return
+
+    message = (
+        "🛡️ *XYDARK TUNNEL MANAGER*\n"
+        "Silakan pilih perintah:\n\n"
+        "/addvmess - Buat akun VMess\n"
+        "/addvless - Buat akun VLESS\n"
+        "/addtrojan - Buat akun Trojan\n"
+        "/addssh - Buat akun SSH\n"
+        "/checkquota - Cek kuota akun\n"
+        "/checklogin - Cek login aktif\n"
+        "/renew - Perpanjang akun\n"
+        "/delete - Hapus akun\n"
+    )
+    await update.message.reply_markdown(message)
+
+# Main bot
+if __name__ == '__main__':
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("menu", menu))
+
+    print("✅ Bot berjalan...")
+    app.run_polling()
