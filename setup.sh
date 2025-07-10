@@ -56,6 +56,14 @@ wget -q -O /etc/xydark/bot/bot.conf https://raw.githubusercontent.com/xydarknet/
 wget -q -O /etc/xydark/bot/owner.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/owner.conf
 wget -q -O /etc/xydark/bot/allowed.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/allowed.conf
 
+
+# === Install Script Add VLESS ===
+echo -e "▶ Menambahkan Script Add VLESS..."
+mkdir -p /etc/xray
+wget -q -O /etc/xray/addvless https://raw.githubusercontent.com/xydarknet/x/main/xray/addvless
+chmod +x /etc/xray/addvless
+
+
 # Install modul Python
 pip3 install python-telegram-bot==20.3 httpx
 
