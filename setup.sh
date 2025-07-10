@@ -252,6 +252,13 @@ wget -q -O /etc/xydark/bot/allowed.conf https://raw.githubusercontent.com/xydark
 
 # Restart service bot jika ada update
 systemctl daemon-reload
+
+
+
+# Tambahkan auto-run menu saat login root
+if ! grep -q "menu" /root/.bashrc; then
+    echo "menu" >> /root/.bashrc
+fi
 systemctl restart xydark-bot
 
 echo -e "✅ Bot Telegram berhasil diupdate & direstart."
