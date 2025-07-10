@@ -3,12 +3,20 @@
 
 # === CONFIG ===
 domain=$(cat /etc/xray/domain)
-user=vless-$(tr -dc a-z0-9 </dev/urandom | head -c4)
+read -rp "Masukkan username: " user
+[[ -z "$user" ]] && user="vless-$(tr -dc a-z0-9 </dev/urandom | head -c4)"
+read -rp "Masukkan masa aktif (hari): " exp_days
+[[ -z "$exp_days" ]] && exp_days=30
 uuid=$(uuidgen)
-exp_days=30
 exp_date=$(date -d "$exp_days days" +"%Y-%m-%d")
 tel_token=$(cat /etc/xydark/bot-token)
 tel_chatid=$(cat /etc/xydark/owner-id)
+
+# === INPUT SNI DAN BUG ===
+read -rp "Masukkan SNI (ex: MAS ARGA GANTENG): " sni
+[[ -z "$sni" ]] && sni="$domain"
+read -rp "Masukkan BUG (ex: xydark.biz.id): " bug
+[[ -z "$bug" ]] && bug="$domain"
 
 # === TAMBAH KE CONFIG XRAY ===
 cat <<EOF >> /etc/xray/config.json
@@ -20,10 +28,8 @@ cat <<EOF >> /etc/xray/config.json
 EOF
 
 # === LINK VLESS TLS / NON-TLS ===
-port_tls=443
-port_ntls=80
-vless_tls="vless://$uuid@$domain:$port_tls?type=ws&encryption=none&host=$domain&path=/vless&security=tls#$user"
-vless_ntls="vless://$uuid@$domain:$port_ntls?type=ws&encryption=none&host=$domain&path=/vless&security=none#$user"
+vless_tls="vless://$uuid@$sni:443?path=%2Fvlessws&security=tls&encryption=none&host=$bug&type=ws#$user"
+vless_ntls="vless://$uuid@$sni:80?path=%2Fvlessws&security=none&encryption=none&host=$bug&type=ws#$user"
 
 # === QR CODE GENERATE ===
 qr_dir="/etc/xray/qr"
@@ -40,29 +46,34 @@ echo -e "║ Username : $user"
 echo -e "║ Domain   : $domain"
 echo -e "║ UUID     : $uuid"
 echo -e "║ Expired  : $exp_date"
+echo -e "║ SNI      : $sni"
+echo -e "║ BUG      : $bug"
 echo -e "╠════════════════════════════════════════════╣"
-echo -e "║ TLS Link     :\n\e[1;33m$vless_tls\e[0m"
-echo -e "║ Non-TLS Link :\n\e[1;33m$vless_ntls\e[0m"
+echo -e "║ TLS Link     :"
+echo -e "\e[1;33m$vless_tls\e[0m"
+echo -e "║ Non-TLS Link :"
+echo -e "\e[1;33m$vless_ntls\e[0m"
 echo -e "╚════════════════════════════════════════════╝\e[0m"
 
-# === KIRIM KE TELEGRAM ===
+# === KIRIM KE TELEGRAM (gunakan escape agar tidak error) ===
+escaped_tls=$(echo "$vless_tls" | sed 's/\_/\\_/g')
+escaped_ntls=$(echo "$vless_ntls" | sed 's/\_/\\_/g')
 curl -s -X POST https://api.telegram.org/bot$tel_token/sendMessage \
  -d chat_id="$tel_chatid" \
  -d parse_mode="Markdown" \
  -d text="🆕 *Akun VLESS WS Berhasil Dibuat!*
 
-\`\`\`
-Username : $user
-Domain   : $domain
-UUID     : $uuid
-Expired  : $exp_date
-\`\`\`
+*Username:* \`$user\`
+*SNI:* \`$sni\`
+*BUG:* \`$bug\`
+*UUID:* \`$uuid\`
+*Expired:* \`$exp_date\`
 
-🔐 *VLESS TLS:*
-\`$vless_tls\`
+🔐 *TLS Link:*
+\`$escaped_tls\`
 
-🔓 *VLESS Non-TLS:*
-\`$vless_ntls\`
+🔓 *Non-TLS Link:*
+\`$escaped_ntls\`
 
 👤 Dibuat oleh Script @xydark"
 
