@@ -1,260 +1,75 @@
 #!/bin/bash
-# setup.sh - xydark autoscript FULL installer
-#!/bin/bash
-# cari apa..?? harta tahta hanya sementara ingat masih ada kehidupan setelah kematian
-# jangan lupa sholat ingat ajal menantimu
-# dibawah ini bukan cd kaset ya
-cd
-rm -rf setup.sh
-clear
-red='\e[1;31m'
-green='\e[0;32m'
-yell='\e[1;33m'
-tyblue='\e[1;36m'
-BRed='\e[1;31m'
-BGreen='\e[1;32m'
-BYellow='\e[1;33m'
-BBlue='\e[1;34m'
-NC='\e[0m'
-purple() { echo -e "\\033[35;1m${*}\\033[0m"; }
-tyblue() { echo -e "\\033[36;1m${*}\\033[0m"; }
-yellow() { echo -e "\\033[33;1m${*}\\033[0m"; }
-green() { echo -e "\\033[32;1m${*}\\033[0m"; }
-red() { echo -e "\\033[31;1m${*}\\033[0m"; }
-cd /root
-#System version number
-if [ "${EUID}" -ne 0 ]; then
-		echo "You need to run this script as root"
-  sleep 5
-		exit 1
-fi
-if [ "$(systemd-detect-virt)" == "openvz" ]; then
-		echo "OpenVZ is not supported"
-  clear
-                echo "For VPS with KVM and VMWare virtualization ONLY"
-  sleep 5
-		exit 1
-fi
 
-localip=$(hostname -I | cut -d\  -f1)
-hst=( `hostname` )
-dart=$(cat /etc/hosts | grep -w `hostname` | awk '{print $2}')
-if [[ "$hst" != "$dart" ]]; then
-echo "$localip $(hostname)" >> /etc/hosts
-fi
-# buat folder
-mkdir -p /etc/xray
-mkdir -p /etc/v2ray
-touch /etc/xray/domain
-touch /etc/v2ray/domain
-touch /etc/xray/scdomain
-touch /etc/v2ray/scdomain
+◦•●◉✿script by xydark✿◉●•◦
+
+Auto Install + Dynamic Info + UI + GitHub Auto Update
+
+https://github.com/xydarknet/x (repo)
+
+============ WARNA =============
+
+RED='\e[31m' GREEN='\e[32m' YELLOW='\e[33m' BLUE='\e[34m' CYAN='\e[36m' NC='\e[0m'
+
+============ LOKASI FILE =============
+
+INSTALL_DIR="/etc/xydark" FLAG="$INSTALL_DIR/.installed" CLIENT_FILE="$INSTALL_DIR/client.conf" VERSION_FILE="$INSTALL_DIR/version.conf" EXPIRE_FILE="$INSTALL_DIR/expire.conf" REPO="https://raw.githubusercontent.com/xydarknet/x/main"
+
+============ HEADER ANIMASI =============
+
+function header_ui() { clear echo -e "${CYAN}◦•●◉✿ ${YELLOW}WELCOME TO XYDARK MENU${CYAN} ✿◉●•◦" echo -e "${CYAN}═════════════════════════════════════════════════════" echo -e "${BLUE}     AUTO SCRIPT TUNNELING - UI DYNAMIC SYSTEM" echo -e "     GitHub: github.com/xydarknet/x  |  Telegram: @xydark" echo -e "${CYAN}═════════════════════════════════════════════════════${NC}" sleep 1 }
+
+============ AUTO INSTALL =============
+
+auto_install() { echo -e "${CYAN}[*] Instalasi awal sedang diproses...${NC}" mkdir -p $INSTALL_DIR apt update -y &>/dev/null apt install curl jq lsb-release dnsutils net-tools -y &>/dev/null echo "kalya" > "$CLIENT_FILE" echo "1.2.5" > "$VERSION_FILE" echo "2025-08-06" > "$EXPIRE_FILE" touch "$FLAG" echo -e "${GREEN}[+] Instalasi selesai.${NC}" sleep 1 }
+
+============ AUTO UPDATE =============
+
+auto_update() { echo -e "${YELLOW}[*] Mengecek pembaruan dari GitHub...${NC}" LATEST_VERSION=$(curl -s "$REPO/version.txt") CURRENT_VERSION=$(cat "$VERSION_FILE") if [[ "$LATEST_VERSION" != "$CURRENT_VERSION" && ! -z "$LATEST_VERSION" ]]; then echo -e "${GREEN}[+] Update tersedia: $CURRENT_VERSION → $LATEST_VERSION${NC}" curl -s "$REPO/setup.sh" -o /usr/local/bin/setup && chmod +x /usr/local/bin/setup echo "$LATEST_VERSION" > "$VERSION_FILE" echo -e "${GREEN}[+] Script berhasil diupdate.${NC}" else echo -e "${CYAN}[i] Script sudah versi terbaru.${NC}" fi sleep 1 }
+
+============ JALANKAN AUTO INSTALL JIKA BELUM =============
+
+[ ! -f "$FLAG" ] && auto_install
+
+============ INFO SISTEM =============
+
+CLIENT=$(cat "$CLIENT_FILE") VER=$(cat "$VERSION_FILE") EXPDATE=$(cat "$EXPIRE_FILE") OS=$(hostnamectl | grep "Operating System" | cut -d ' ' -f5-) KERNEL=$(uname -r) CPU=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed -e 's/^\s*//') FREQ=$(awk -F: '/cpu MHz/ {print $2}' /proc/cpuinfo | sed -n 1p | sed -e 's/^\s*//') CORE=$(nproc) RAM_TOTAL=$(free -m | awk '/Mem:/ {print $2}') RAM_USED=$(free -m | awk '/Mem:/ {print $3}') DISK_TOTAL=$(df -h / | awk 'NR==2 {print $2}') DISK_USED=$(df -h / | awk 'NR==2 {print $3}') IPVPS=$(curl -s ipv4.icanhazip.com) ISP=$(curl -s ipinfo.io/org | cut -d " " -f 2-) REGION=$(curl -s ipinfo.io/region) TZ=$(curl -s ipinfo.io/timezone) DOMAIN="xydark.biz.id" SDOMAIN="ns.xydark.biz.id" TGID="@xydark" TODAY=$(date +%s) EXPIRE=$(date -d "$EXPDATE" +%s) DAYS_LEFT=$(( (EXPIRE - TODAY) / 86400 ))
+
+============ HEADER & MENU =============
+
+auto_update header_ui
+
+echo -e "${CYAN}╔════════════════════════════════════╗" echo -e "║              ${YELLOW}SYS INFO${CYAN}              ║" echo -e "╚════════════════════════════════════╝" echo -e " OS SYSTEM     : ${OS}" echo -e " KERNEL TYPE   : ${KERNEL}" echo -e " CPU MODEL     : ${CPU}" echo -e " CPU FREQUENCY : ${FREQ} MHz (${CORE} Core)" echo -e " TOTAL RAM     : ${RAM_TOTAL} MB Total / ${RAM_USED} MB Used" echo -e " TOTAL STORAGE : ${DISK_TOTAL} Total / ${DISK_USED} Used" echo -e " DOMAIN        : ${DOMAIN}" echo -e " SLOWDNS DOMAIN: ${SDOMAIN}" echo -e " IP ADDRESS    : ${IPVPS}" echo -e " ISP           : ${ISP}" echo -e " REGION        : ${REGION} [${TZ}]" echo -e " CLIENTNAME    : ${CLIENT}" echo -e " SCRIPT VERSION: ${VER}" echo -e "══════════════════════════════════════" echo -e " EXP SCRIPT: ${EXPDATE} (${DAYS_LEFT} days)" echo -e " REGIST BY : ${TGID}" echo -e "══════════════════════════════════════" echo -e "" echo -e "${GREEN}========= MAIN MENU =========${NC}" echo -e "${GREEN}1.${NC} MENU SSH & OVPN" echo -e "${GREEN}2.${NC} MENU XRAY" echo -e "${GREEN}3.${NC} MENU L2TP" echo -e "${GREEN}4.${NC} MENU NOOBZVPNS" echo -e "${GREEN}5.${NC} SETTINGS" echo -e "${GREEN}6.${NC} ON/OFF SERVICES" echo -e "${GREEN}7.${NC} STATUS SERVICES" echo -e "${GREEN}8.${NC} UPDATE SCRIPT" echo -e "${GREEN}9.${NC} REBUILD OS" echo -e "${GREEN}0.${NC} Exit" echo -ne "\n${YELLOW}Select menu [0-9]: ${NC}" read opt
+
+case $opt in
+
+1. clear; menu-ssh ;;
 
 
-echo -e "[ ${BBlue}NOTES${NC} ] Before we go.. "
-sleep 0.5
-echo -e "[ ${BBlue}NOTES${NC} ] I need check your headers first.."
-sleep 0.5
-echo -e "[ ${BGreen}INFO${NC} ] Checking headers"
-sleep 0.5
-totet=`uname -r`
-REQUIRED_PKG="linux-headers-$totet"
-PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
-echo Checking for $REQUIRED_PKG: $PKG_OK
-if [ "" = "$PKG_OK" ]; then
-  sleep 0.5
-  echo -e "[ ${BRed}WARNING${NC} ] Try to install ...."
-  echo "No $REQUIRED_PKG. Setting up $REQUIRED_PKG."
-  apt-get --yes install $REQUIRED_PKG
-  sleep 0.5
-  echo ""
-  sleep 0.5
-  echo -e "[ ${BBlue}NOTES${NC} ] If error you need.. to do this"
-  sleep 0.5
-  echo ""
-  sleep 0.5
-  echo -e "[ ${BBlue}NOTES${NC} ] apt update && apt upgrade -y && reboot"
-  sleep 0.5
-  echo ""
-  sleep 0.5
-  echo -e "[ ${BBlue}NOTES${NC} ] After this"
-  sleep 0.5
-  echo -e "[ ${BBlue}NOTES${NC} ] Then run this script again"
-  echo -e "[ ${BBlue}NOTES${NC} ] enter now"
-  read
-else
-  echo -e "[ ${BGreen}INFO${NC} ] Oke installed"
-fi
-
-ttet=`uname -r`
-ReqPKG="linux-headers-$ttet"
-if ! dpkg -s $ReqPKG  >/dev/null 2>&1; then
-  rm /root/setup.sh >/dev/null 2>&1 
-  exit
-else
-  clear
-fi
+2. clear; menu-xray ;;
 
 
-secs_to_human() {
-    echo "Installation time : $(( ${1} / 3600 )) hours $(( (${1} / 60) % 60 )) minute's $(( ${1} % 60 )) seconds"
-}
-start=$(date +%s)
-ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
-sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1
-sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1
+3. clear; menu-l2tp ;;
 
-echo -e "[ ${BGreen}INFO${NC} ] Preparing the install file"
-apt install git curl -y >/dev/null 2>&1
-apt install python -y >/dev/null 2>&1
-echo -e "[ ${BGreen}INFO${NC} ] Aight good ... installation file is ready"
-sleep 0.5
-echo -ne "[ ${BGreen}INFO${NC} ] Check permission : "
 
-echo -e "$BGreen Permission Accepted!$NC"
-sleep 2
+4. clear; menu-noobz ;;
 
-mkdir -p /var/lib/ >/dev/null 2>&1
-echo "IP=" >> /var/lib/ipvps.conf
 
-echo ""
-clear
-echo -e "$BBlue                     SETUP DOMAIN VPS     $NC"
-echo -e "$BYellow----------------------------------------------------------$NC"
-echo -e "$BGreen 1. Use Domain Random / Gunakan Domain Random $NC"
-echo -e "$BGreen 2. Choose Your Own Domain / Gunakan Domain Sendiri $NC"
-echo -e "$BYellow----------------------------------------------------------$NC"
-read -rp " input 1 or 2 / pilih 1 atau 2 : " dns
-if test $dns -eq 1; then
-wget https://raw.githubusercontent.com/givpn/AutoScriptXray/master/ssh/cf && chmod +x cf && ./cf
-elif test $dns -eq 2; then
-read -rp "Enter Your Domain / masukan domain : " dom
-echo "IP=$dom" > /var/lib/ipvps.conf
-echo "$dom" > /root/scdomain
-echo "$dom" > /etc/xray/scdomain
-echo "$dom" > /etc/xray/domain
-echo "$dom" > /etc/v2ray/domain
-echo "$dom" > /root/domain
-else 
-echo "Not Found Argument"
-exit 1
-fi
-echo -e "${BGreen}Done!${NC}"
-sleep 2
-clear
-    
-#install ssh ovpn
-echo -e "\e[33m-----------------------------------\033[0m"
-echo -e "$BGreen      Install SSH Websocket           $NC"
-echo -e "\e[33m-----------------------------------\033[0m"
-sleep 0.5
-clear
-wget https://raw.githubusercontent.com/givpn/AutoScriptXray/master/ssh/ssh-vpn.sh && chmod +x ssh-vpn.sh && ./ssh-vpn.sh
-#Instal Xray
-echo -e "\e[33m-----------------------------------\033[0m"
-echo -e "$BGreen          Install XRAY              $NC"
-echo -e "\e[33m-----------------------------------\033[0m"
-sleep 0.5
-clear
-wget https://raw.githubusercontent.com/givpn/AutoScriptXray/master/xray/ins-xray.sh && chmod +x ins-xray.sh && ./ins-xray.sh
-wget https://raw.githubusercontent.com/givpn/AutoScriptXray/master/sshws/insshws.sh && chmod +x insshws.sh && ./insshws.sh
-clear
-cat> /root/.profile << END
-# ~/.profile: executed by Bourne-compatible login shells.
+5. clear; menu-setting ;;
 
-if [ "$BASH" ]; then
-  if [ -f ~/.bashrc ]; then
-    . ~/.bashrc
-  fi
-fi
 
-mesg n || true
-clear
-menu
-END
-chmod 644 /root/.profile
+6. clear; menu-onoff ;;
 
-if [ -f "/root/log-install.txt" ]; then
-rm /root/log-install.txt > /dev/null 2>&1
-fi
-if [ -f "/etc/afak.conf" ]; then
-rm /etc/afak.conf > /dev/null 2>&1
-fi
-if [ ! -f "/etc/log-create-ssh.log" ]; then
-echo "Log SSH Account " > /etc/log-create-ssh.log
-fi
-if [ ! -f "/etc/log-create-vmess.log" ]; then
-echo "Log Vmess Account " > /etc/log-create-vmess.log
-fi
-if [ ! -f "/etc/log-create-vless.log" ]; then
-echo "Log Vless Account " > /etc/log-create-vless.log
-fi
-if [ ! -f "/etc/log-create-trojan.log" ]; then
-echo "Log Trojan Account " > /etc/log-create-trojan.log
-fi
-if [ ! -f "/etc/log-create-shadowsocks.log" ]; then
-echo "Log Shadowsocks Account " > /etc/log-create-shadowsocks.log
-fi
-history -c
-serverV=$( curl -sS https://raw.githubusercontent.com/givpn/AutoScriptXray/master/menu/versi  )
-echo $serverV > /opt/.ver
-aureb=$(cat /home/re_otm)
-b=11
-if [ $aureb -gt $b ]
-then
-gg="PM"
-else
-gg="AM"
-fi
-curl -sS ipv4.icanhazip.com > /etc/myipvps
-echo ""
-echo "=================================================================="  | tee -a log-install.txt
-echo "      ___                                    ___         ___      "  | tee -a log-install.txt
-echo "     /  /\        ___           ___         /  /\       /__/\     "  | tee -a log-install.txt
-echo "    /  /:/_      /  /\         /__/\       /  /::\      \  \:\    "  | tee -a log-install.txt
-echo "   /  /:/ /\    /  /:/         \  \:\     /  /:/\:\      \  \:\   "  | tee -a log-install.txt
-echo "  /  /:/_/::\  /__/::\          \  \:\   /  /:/~/:/  _____\__\:\  "  | tee -a log-install.txt
-echo " /__/:/__\/\:\ \__\/\:\__   ___  \__\:\ /__/:/ /:/  /__/::::::::\ "  | tee -a log-install.txt
-echo " \  \:\ /~~/:/    \  \:\/\ /__/\ |  |:| \  \:\/:/   \  \:\~~\~~\/ "  | tee -a log-install.txt
-echo "  \  \:\  /:/      \__\::/ \  \:\|  |:|  \  \::/     \  \:\  ~~~  "  | tee -a log-install.txt
-echo "   \  \:\/:/       /__/:/   \  \:\__|:|   \  \:\      \  \:\      "  | tee -a log-install.txt
-echo "    \  \::/        \__\/     \__\::::/     \  \:\      \  \:\     "  | tee -a log-install.txt
-echo "     \__\/                       ~~~~       \__\/       \__\/ 1.0 "  | tee -a log-install.txt
-echo "=================================================================="  | tee -a log-install.txt
-echo ""
-echo "   >>> Service & Port"  | tee -a log-install.txt
-echo "   - OpenSSH                  : 22"  | tee -a log-install.txt
-echo "   - SSH Websocket            : 80" | tee -a log-install.txt
-echo "   - SSH SSL Websocket        : 443" | tee -a log-install.txt
-echo "   - Stunnel4                 : 222, 777" | tee -a log-install.txt
-echo "   - Dropbear                 : 109, 143" | tee -a log-install.txt
-echo "   - Badvpn                   : 7100-7900" | tee -a log-install.txt
-echo "   - Nginx                    : 81" | tee -a log-install.txt
-echo "   - Vmess WS TLS             : 443" | tee -a log-install.txt
-echo "   - Vless WS TLS             : 443" | tee -a log-install.txt
-echo "   - Trojan WS TLS            : 443" | tee -a log-install.txt
-echo "   - Shadowsocks WS TLS       : 443" | tee -a log-install.txt
-echo "   - Vmess WS none TLS        : 80" | tee -a log-install.txt
-echo "   - Vless WS none TLS        : 80" | tee -a log-install.txt
-echo "   - Trojan WS none TLS       : 80" | tee -a log-install.txt
-echo "   - Shadowsocks WS none TLS  : 80" | tee -a log-install.txt
-echo "   - Vmess gRPC               : 443" | tee -a log-install.txt
-echo "   - Vless gRPC               : 443" | tee -a log-install.txt
-echo "   - Trojan gRPC              : 443" | tee -a log-install.txt
-echo "   - Shadowsocks gRPC         : 443" | tee -a log-install.txt
-echo ""
-echo "=============================Contact==============================" | tee -a log-install.txt
-echo "---------------------------t.me/givpn-----------------------------" | tee -a log-install.txt
-echo "==================================================================" | tee -a log-install.txt
-echo -e ""
-echo ""
-echo "" | tee -a log-install.txt
-rm /root/setup.sh >/dev/null 2>&1
-rm /root/ins-xray.sh >/dev/null 2>&1
-rm /root/insshws.sh >/dev/null 2>&1
-secs_to_human "$(($(date +%s) - ${start}))" | tee -a log-install.txt
-echo -e ""
-echo " Auto reboot in 10 Seconds "
-sleep 10
-rm -rf setup.sh
-reboot
+
+7. clear; menu-status ;;
+
+
+8. clear; auto_update ; bash setup.sh ;;
+
+
+9. clear; rebuild-os ;;
+
+
+10. clear; exit ;; *) echo -e "${RED}Invalid option.${NC}" && sleep 1 && bash setup.sh ;; esac
+
+
+
