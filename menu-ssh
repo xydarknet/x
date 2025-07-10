@@ -1,29 +1,27 @@
 #!/bin/bash
 
-Template: menu-ssh
-
 ◦•●◉✿ menu SSH by xydark ✿◉●•◦
 
-DOMAIN="xydark.biz.id" SDOMAIN="ns.xydark.biz.id" PUBKEY="b58d1ccdd9780b50579a355b13bff36ce20c22966f333b2d0a48de3c5651c647" IPVPS=$(curl -s ipv4.icanhazip.com) HOSTNAME=$(hostname)
+DOMAIN="xydark.biz.id" SDOMAIN="ns.xydark.biz.id" PUBKEY="b58d1ccdd9780b50579a355b13bff36ce20c22966f333b2d0a48de3c5651c647" IPVPS=$(curl -s ipv4.icanhazip.com)
 
-clear echo -e "\e[36m═══════════════════════════════════" echo -e "       SSH & OVPN MANAGEMENT MENU" echo -e "═══════════════════════════════════\e[0m" echo -e " 1. Create SSH Account" echo -e " 2. Delete SSH Account" echo -e " 3. Renew SSH Account" echo -e " 4. Check SSH Login User" echo -e " 5. Detail SSH Account" echo -e " 6. Change SSH Password" echo -e " 0. Back to Main Menu" echo -ne "\nSelect [0-6]: " read sshopt
+clear echo -e "\e[36m═══════════════════════════════════" echo -e "           SSH MANAGEMENT MENU" echo -e "═══════════════════════════════════\e[0m" echo -e " 1. Create SSH Account" echo -e " 2. Delete SSH Account" echo -e " 3. Renew SSH Account" echo -e " 4. Change Password" echo -e " 5. Detail SSH Account" echo -e " 0. Back to Main Menu" echo -ne "\nSelect [0-5]: "; read sshopt
 
-case $sshopt in 1) clear echo -ne "Enter Username : "; read username if id "$username" &>/dev/null; then echo "User already exists!" exit 1 fi echo -ne "Enter Password : "; read -s password; echo echo -ne "Valid for (days): "; read days exp_date=$(date -d "+$days days" +%Y-%m-%d) exp_display=$(date -d "+$days days" +"%b %d, %Y") useradd -e $exp_date -s /bin/false -M $username echo -e "$username:$password" | chpasswd
+case $sshopt in 1) read -p "Enter Username: " username read -p "Enter Password: " password read -p "Valid for (days): " exp_days exp_date=$(date -d "+$exp_days days" +"%Y-%m-%d") useradd -e $exp_date -s /bin/false -M $username echo -e "$password\n$password" | passwd $username > /dev/null 2>&1
 
 clear
 echo "╔════════════════════════╗                                         ║ sc by t.me/user_legend ║"
 echo "╔════════════════════════════════════╗"
 echo "║              SYS INFO              ║                             ╚════════════════════════════════════╝"
-echo " OS SYSTEM: $(hostnamectl | grep 'Operating System' | cut -d ' ' -f5-)"
+echo " OS SYSTEM: Debian GNU/Linux 11 (bullseye) x86_64 (64 Bit)"
 echo " KERNEL TYPE: $(uname -r)"
-echo " CPU MODEL:  $(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed -e 's/^\s*//')"
-echo " CPU FREQUENCY:  $(awk -F: '/cpu MHz/ {print $2}' /proc/cpuinfo | sed -n 1p | sed -e 's/^\s*//') MHz ($(nproc) core)"
+echo " CPU MODEL:  $(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed -e 's/^ *//')"
+echo " CPU FREQUENCY:  $(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | sed -e 's/^ *//') MHz ($(nproc) core)"
 echo " TOTAL RAM: $(free -m | awk '/Mem:/ {print $2}') MB Total / $(free -m | awk '/Mem:/ {print $3}') MB Used"
 echo " TOTAL STORAGE: $(df -h / | awk 'NR==2 {print $2}') Total / $(df -h / | awk 'NR==2 {print $3}') Used"
 echo " DOMAIN: $DOMAIN"
 echo " SLOWDNS DOMAIN: $SDOMAIN"
 echo " IP ADDRESS: $IPVPS"
-echo " ISP: $(curl -s ipinfo.io/org | cut -d " " -f 2-)"
+echo " ISP: $(curl -s ipinfo.io/org | cut -d ' ' -f 2-)"
 echo " REGION: $(curl -s ipinfo.io/city) [$(curl -s ipinfo.io/timezone)]"
 echo " CLIENTNAME: $username"
 echo " SCRIPT VERSION: 1.2.5"
@@ -60,31 +58,23 @@ echo "ALL OPENVPN CONFIG : http://$DOMAIN:8081/openvpn.zip"
 echo "━━━━━━━━━━━━━━━━━━━━"
 echo "Payload SSH WS : GET / HTTP/1.1[crlf]Host: $DOMAIN[crlf]Upgrade: Websocket[crlf]Connection: Keep-Alive[crlf]User-Agent: [ua][crlf][crlf]"
 echo "━━━━━━━━━━━━━━━━━━━━"
-echo "Payload OVPN WS : GET /ovpn HTTP/1.1[crlf]Host: $DOMAIN[crlf]Upgrade: Websocket[crlf]Connection: Keep-Alive[crlf]User-Agent: [ua][crlf][crlf]"
-echo "━━━━━━━━━━━━━━━━━━━━"
-echo "Payload WS ENHANCED : PATCH / HTTP/1.1[crlf]Host: [host][crlf]Host: ISI_BUG_DISINI[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf]Upgrade: websocket[crlf][crlf]"
-echo "━━━━━━━━━━━━━━━━━━━━"
-echo "Expired on : $exp_display"
+echo "Expired on : $exp_date"
 ;;
 
 2. 
 
-echo -ne "Enter Username to delete: "; read deluser
-if id "$deluser" &>/dev/null; then
-  userdel -f "$deluser"
-  echo "User '$deluser' deleted."
-else
-  echo "User not found."
-fi
+read -p "Enter Username to delete: " deluser
+userdel -f $deluser && echo "User $deluser deleted."
 ;;
 
 3. 
 
-echo -ne "Enter Username to renew: "; read ruser
+read -p "Enter Username to renew: " ruser
 if id "$ruser" &>/dev/null; then
-  echo -ne "Extend how many days? "; read extend
-  chage -E $(date -d "+$extend days" +%Y-%m-%d) $ruser
-  echo "User '$ruser' extended for $extend days."
+  read -p "Extend for (days): " add
+  newexp=$(date -d "+$add days" +"%Y-%m-%d")
+  chage -E $newexp $ruser
+  echo "User '$ruser' extended until $newexp."
 else
   echo "User not found."
 fi
@@ -92,42 +82,29 @@ fi
 
 4. 
 
-who | grep -i ssh || echo "No SSH login found."
+read -p "Enter Username to change password: " chuser
+read -sp "New Password: " newpass
+echo "$chuser:$newpass" | chpasswd
+echo -e "\nPassword updated."
 ;;
 
 5. 
 
-echo -ne "\nEnter SSH Username: "; read sshuser
-if id "$sshuser" &>/dev/null; then
-  echo -e "\nUser: $sshuser"
-  chage -l $sshuser
-  lastlog -u $sshuser
-else
-  echo "User not found"
-fi
+read -p "Enter Username to view detail: " duser
+grep "^$duser:" /etc/passwd > /dev/null || { echo "User not found."; exit; }
+expire=$(chage -l $duser | grep "Account expires" | cut -d: -f2)
+echo "Username : $duser"
+echo "Expired On : $expire"
+echo "IP Address : $IPVPS"
+echo "Domain : $DOMAIN"
+echo "SlowDNS : $SDOMAIN"
+echo "PubKey : $PUBKEY"
 ;;
 
-6. 
+0. 
 
-echo -ne "\nEnter SSH Username: "; read userpass
-if id "$userpass" &>/dev/null; then
-  echo -ne "Enter New Password: "; read -s pass1
-  echo
-  echo -ne "Confirm Password: "; read -s pass2
-  echo
-  if [[ "$pass1" == "$pass2" ]]; then
-    echo -e "$userpass:$pass1" | chpasswd
-    echo "Password changed successfully."
-  else
-    echo "Password does not match."
-  fi
-else
-  echo "User not found."
-fi
+bash /usr/local/bin/menu
 ;;
 
-0. bash /usr/local/bin/menu;; *) echo "Invalid option"; sleep 1; bash $0;; esac
-
-
-
+*) echo "Invalid option." sleep 1 bash $0 ;; esac
 
