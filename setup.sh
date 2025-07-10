@@ -1,71 +1,121 @@
 #!/bin/bash
 
-=======script by xydark=======
+===============================================
 
-============ WARNA =============
+AUTO VPS SETUP SCRIPT by xydark
 
-RED='\e[31m' GREEN='\e[32m' YELLOW='\e[33m' BLUE='\e[34m' CYAN='\e[36m' NC='\e[0m'
+===============================================
 
-============ LOKASI FILE =============
+--- Bagian A: Install Dependency dan Sistem Info ---
 
-INSTALL_DIR="/etc/xydark" FLAG="$INSTALL_DIR/.installed" CLIENT_FILE="$INSTALL_DIR/client.conf" VERSION_FILE="$INSTALL_DIR/version.conf" EXPIRE_FILE="$INSTALL_DIR/expire.conf" REPO="https://raw.githubusercontent.com/xydarknet/x/main"
+echo -e "\n[•] Update dan install dependency dasar..." apt update -y >/dev/null 2>&1 apt install curl wget jq neofetch socat cron net-tools -y >/dev/null 2>&1
 
-============ HEADER ANIMASI =============
+Set timezone ke Asia/Jakarta
 
-function header_ui() { clear echo -e "${CYAN}◦•●◉✿ ${YELLOW}WELCOME TO XYDARK MENU${CYAN} ✿◉●•◦" echo -e "${CYAN}═════════════════════════════════════════════════════" echo -e "${BLUE}     AUTO SCRIPT TUNNELING - UI DYNAMIC SYSTEM" echo -e "     GitHub: github.com/xydarknet/x  |  Telegram: @xydark" echo -e "${CYAN}═════════════════════════════════════════════════════${NC}" sleep 1 }
+ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
-============ AUTO INSTALL =============
+--- Input Domain Utama ---
 
-auto_install() { echo -e "${CYAN}[*] Instalasi awal sedang diproses...${NC}" mkdir -p $INSTALL_DIR apt update -y &>/dev/null apt install curl jq lsb-release dnsutils net-tools -y &>/dev/null echo "kalya" > "$CLIENT_FILE" echo "1.2.5" > "$VERSION_FILE" echo "2025-08-06" > "$EXPIRE_FILE" touch "$FLAG" echo -e "${GREEN}[+] Instalasi selesai.${NC}" sleep 1 }
+echo -e "\n[•] Masukkan domain utama Anda (contoh: xydark.biz.id)" read -rp "Domain: " domain mkdir -p /etc/xray /etc/v2ray /etc/slowdns
 
-============ AUTO UPDATE =============
+Simpan domain
 
-auto_update() { echo -e "${YELLOW}[*] Mengecek pembaruan dari GitHub...${NC}" LATEST_VERSION=$(curl -s "$REPO/version.txt") CURRENT_VERSION=$(cat "$VERSION_FILE") if [[ "$LATEST_VERSION" != "$CURRENT_VERSION" && ! -z "$LATEST_VERSION" ]]; then echo -e "${GREEN}[+] Update tersedia: $CURRENT_VERSION → $LATEST_VERSION${NC}" curl -s "$REPO/setup.sh" -o /usr/local/bin/setup && chmod +x /usr/local/bin/setup echo "$LATEST_VERSION" > "$VERSION_FILE" echo -e "${GREEN}[+] Script berhasil diupdate.${NC}" else echo -e "${CYAN}[i] Script sudah versi terbaru.${NC}" fi sleep 1 }
+echo "$domain" | tee /etc/xray/domain /etc/v2ray/domain /etc/slowdns/domain >/dev/null
 
-============ JALANKAN AUTO INSTALL JIKA BELUM =============
+--- Simpan IP VPS dan Info Geo ---
 
-[ ! -f "$FLAG" ] && auto_install
+IPVPS=$(curl -s ipv4.icanhazip.com) ISP=$(curl -s ipinfo.io/org | cut -d " " -f 2-) CITY=$(curl -s ipinfo.io/city) TIMEZONE=$(curl -s ipinfo.io/timezone)
 
-============ INFO SISTEM =============
+--- Input API Cloudflare ---
 
-CLIENT=$(cat "$CLIENT_FILE") VER=$(cat "$VERSION_FILE") EXPDATE=$(cat "$EXPIRE_FILE") OS=$(hostnamectl | grep "Operating System" | cut -d ' ' -f5-) KERNEL=$(uname -r) CPU=$(awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed -e 's/^\s*//') FREQ=$(awk -F: '/cpu MHz/ {print $2}' /proc/cpuinfo | sed -n 1p | sed -e 's/^\s*//') CORE=$(nproc) RAM_TOTAL=$(free -m | awk '/Mem:/ {print $2}') RAM_USED=$(free -m | awk '/Mem:/ {print $3}') DISK_TOTAL=$(df -h / | awk 'NR==2 {print $2}') DISK_USED=$(df -h / | awk 'NR==2 {print $3}') IPVPS=$(curl -s ipv4.icanhazip.com) ISP=$(curl -s ipinfo.io/org | cut -d " " -f 2-) REGION=$(curl -s ipinfo.io/region) TZ=$(curl -s ipinfo.io/timezone) DOMAIN="xydark.biz.id" SDOMAIN="ns.xydark.biz.id" TGID="@xydark" TODAY=$(date +%s) EXPIRE=$(date -d "$EXPDATE" +%s) DAYS_LEFT=$(( (EXPIRE - TODAY) / 86400 ))
+echo -e "\n[•] Konfigurasi DNS Cloudflare" read -rp "Email Cloudflare: " CF_EMAIL read -rp "Global API Key: " CF_API read -rp "Domain Utama (zone): " CF_DOMAIN
 
-============ HEADER & MENU =============
+Simpan config Cloudflare
 
-auto_update header_ui
+cat <<EOF > /root/cf.conf CF_EMAIL=$CF_EMAIL CF_API=$CF_API CF_DOMAIN=$CF_DOMAIN EOF
 
-echo -e "${CYAN}╔════════════════════════════════════╗" echo -e "║              ${YELLOW}SYS INFO${CYAN}              ║" echo -e "╚════════════════════════════════════╝" echo -e " OS SYSTEM     : ${OS}" echo -e " KERNEL TYPE   : ${KERNEL}" echo -e " CPU MODEL     : ${CPU}" echo -e " CPU FREQUENCY : ${FREQ} MHz (${CORE} Core)" echo -e " TOTAL RAM     : ${RAM_TOTAL} MB Total / ${RAM_USED} MB Used" echo -e " TOTAL STORAGE : ${DISK_TOTAL} Total / ${DISK_USED} Used" echo -e " DOMAIN        : ${DOMAIN}" echo -e " SLOWDNS DOMAIN: ${SDOMAIN}" echo -e " IP ADDRESS    : ${IPVPS}" echo -e " ISP           : ${ISP}" echo -e " REGION        : ${REGION} [${TZ}]" echo -e " CLIENTNAME    : ${CLIENT}" echo -e " SCRIPT VERSION: ${VER}" echo -e "══════════════════════════════════════" echo -e " EXP SCRIPT: ${EXPDATE} (${DAYS_LEFT} days)" echo -e " REGIST BY : ${TGID}" echo -e "══════════════════════════════════════" echo -e "" echo -e "${GREEN}========= MAIN MENU =========${NC}" echo -e "${GREEN}1.${NC} MENU SSH & OVPN" echo -e "${GREEN}2.${NC} MENU XRAY" echo -e "${GREEN}3.${NC} MENU L2TP" echo -e "${GREEN}4.${NC} MENU NOOBZVPNS" echo -e "${GREEN}5.${NC} SETTINGS" echo -e "${GREEN}6.${NC} ON/OFF SERVICES" echo -e "${GREEN}7.${NC} STATUS SERVICES" echo -e "${GREEN}8.${NC} UPDATE SCRIPT" echo -e "${GREEN}9.${NC} REBUILD OS" echo -e "${GREEN}0.${NC} Exit" echo -ne "\n${YELLOW}Select menu [0-9]: ${NC}" read opt
+--- Cloudflare API Setup A Record ---
 
-case $opt in
+ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=$CF_DOMAIN" 
+-H "X-Auth-Email: $CF_EMAIL" 
+-H "X-Auth-Key: $CF_API" 
+-H "Content-Type: application/json" | jq -r .result[0].id)
 
-1. clear; menu-ssh ;;
+RECORD=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=A&name=$domain" 
+-H "X-Auth-Email: $CF_EMAIL" 
+-H "X-Auth-Key: $CF_API" 
+-H "Content-Type: application/json")
 
+RECORD_ID=$(echo "$RECORD" | jq -r .result[0].id)
 
-2. clear; menu-xray ;;
+if [[ $RECORD_ID != "null" ]]; then echo -e "[•] Updating A record..." curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RECORD_ID" 
+-H "X-Auth-Email: $CF_EMAIL" 
+-H "X-Auth-Key: $CF_API" 
+-H "Content-Type: application/json" 
+--data "{"type":"A","name":"$domain","content":"$IPVPS","ttl":120,"proxied":false}" >/dev/null else echo -e "[•] Creating A record..." curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" 
+-H "X-Auth-Email: $CF_EMAIL" 
+-H "X-Auth-Key: $CF_API" 
+-H "Content-Type: application/json" 
+--data "{"type":"A","name":"$domain","content":"$IPVPS","ttl":120,"proxied":false}" >/dev/null fi
 
+echo -e "[✓] DNS pointing ke IP VPS: $IPVPS"
 
-3. clear; menu-l2tp ;;
+--- Install acme.sh dan generate SSL ---
 
+echo -e "\n[•] Menginstall acme.sh dan generate SSL..." curl https://acme-install.netlify.app/acme.sh -o acme.sh && chmod +x acme.sh ./acme.sh --install >/dev/null export CF_Email=$CF_EMAIL export CF_Key=$CF_API
 
-4. clear; menu-noobz ;;
+~/.acme.sh/acme.sh --register-account -m $CF_EMAIL >/dev/null ~/.acme.sh/acme.sh --issue --dns dns_cf -d "$domain" --keylength ec-256 --force >/dev/null
 
+~/.acme.sh/acme.sh --install-cert -d "$domain" --ecc 
+--key-file /etc/xray/private.key 
+--fullchain-file /etc/xray/cert.crt >/dev/null
 
-5. clear; menu-setting ;;
+chmod 600 /etc/xray/private.key chmod 644 /etc/xray/cert.crt
 
+echo -e "[✓] SSL berhasil dibuat dan disimpan."
 
-6. clear; menu-onoff ;;
+--- Input Telegram Bot ---
 
+echo -e "\n[•] Konfigurasi Bot Telegram" read -rp "Bot Token: " BOT_TOKEN read -rp "Chat ID: " CHAT_ID read -rp "Client Name: " CLIENTNAME
 
-7. clear; menu-status ;;
+cat <<EOF > /etc/bottelegram.conf BOT_TOKEN=$BOT_TOKEN CHAT_ID=$CHAT_ID CLIENTNAME=$CLIENTNAME EOF
 
+--- Install & Setup XRAY Core ---
 
-8. clear; auto_update ; bash setup.sh ;;
+echo -e "\n[•] Install XRAY Core..." mkdir -p /usr/local/bin mkdir -p /etc/xray curl -Ls https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip -o xray.zip unzip -q xray.zip -d xray install -m 755 xray/xray /usr/local/bin/xray rm -rf xray xray.zip
 
+Buat file config XRAY (TLS + NTLS)
 
-9. clear; rebuild-os ;;
+cat <<EOF > /etc/xray/config.json { "log": { "loglevel": "warning" }, "inbounds": [ { "port": 443, "protocol": "vmess", "settings": { "clients": [] }, "streamSettings": { "network": "ws", "security": "tls", "tlsSettings": { "certificates": [ { "certificateFile": "/etc/xray/cert.crt", "keyFile": "/etc/xray/private.key" } ] }, "wsSettings": { "path": "/xray" } } }, { "port": 80, "protocol": "vmess", "settings": { "clients": [] }, "streamSettings": { "network": "ws", "security": "none", "wsSettings": { "path": "/xray" } } } ], "outbounds": [ { "protocol": "freedom", "settings": {} } ] } EOF
 
+Buat systemd service untuk xray
 
-10. clear; exit ;; *) echo -e "${RED}Invalid option.${NC}" && sleep 1 && bash setup.sh ;; esac
+cat <<EOF > /etc/systemd/system/xray.service [Unit] Description=Xray Service After=network.target nss-lookup.target
 
+[Service] User=root ExecStart=/usr/local/bin/xray -config /etc/xray/config.json Restart=on-failure
 
+[Install] WantedBy=multi-user.target EOF
+
+Enable & Start xray
+
+systemctl daemon-reexec systemctl daemon-reload systemctl enable xray systemctl restart xray
+
+echo -e "[✓] XRAY TLS & NonTLS berhasil dijalankan."
+
+--- Notifikasi ke Telegram ---
+
+TEXT="\xF0\x9F\x9B\xA1\xEF\xB8\x8F Setup VPS Selesai ━━━━━━━━━━━━━━━ 📡 Domain: `$domain` 🔐 SSL: Aktif 📦 XRAY: Aktif (TLS/NTLS) 🌐 IP VPS: `$IPVPS` 🏷️ Client: $CLIENTNAME 📅 Tanggal: $(date +"%d-%m-%Y %H:%M") ━━━━━━━━━━━━━━━ ✅ VPS Siap Digunakan!"
+
+curl -s -X POST https://api.telegram.org/bot$BOT_TOKEN/sendMessage 
+-d chat_id="$CHAT_ID" 
+-d parse_mode="Markdown" 
+-d text="$TEXT"
+
+--- Tambahkan info login ---
+
+echo "clear" >> ~/.profile echo "neofetch" >> ~/.profile echo "echo -e 'Welcome, $CLIENTNAME - $domain'" >> ~/.profile
+
+--- Selesai ---
+
+echo -e "\n[✓] Setup selesai! XRAY TLS/NTLS aktif & konfigurasi berhasil." echo -e "[✓] Silakan lanjut add user XRAY (VMess/VLESS) via CLI."
 
