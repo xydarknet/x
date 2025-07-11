@@ -1,31 +1,50 @@
 #!/bin/bash
-# Auto update script from GitHub repo xydarknet/x
+# ◦•●◉✿ update-script by xydark ✿◉●•◦
 
+echo -e "\e[1;36m▶ Mengunduh file terbaru dari GitHub repo xydarknet/x...\e[0m"
 base_url="https://raw.githubusercontent.com/xydarknet/x/main"
 
 files=(
-  setup.sh
-  system-info.sh
-  request-ip.sh
-  check-ip.sh
-  menu/menu.sh
-  menu/menu-xray.sh
-  menu/menu-ssh.sh
-  menu/menu-set.sh
-  xray/addvless
-  xray/addvmess
-  xray/addtrojan
-  xray/delvless
-  xray/delvmess
-  xray/deltrojan
-  xray/renewvless
-  xray/renewvmess
-  xray/renewtrojan
-  tools/update-script
+  "menu/menu.sh:/usr/bin/menu"
+  "menu/menu-xray.sh:/usr/bin/menu-xray"
+  "menu/menu-ssh.sh:/usr/bin/menu-ssh"
+  "menu/menu-set.sh:/usr/bin/menu-set"
+  "xray/addvmess:/usr/bin/addvmess"
+  "xray/addvless:/usr/bin/addvless"
+  "xray/addtrojan:/usr/bin/addtrojan"
+  "xray/delvmess:/usr/bin/delvmess"
+  "xray/delvless:/usr/bin/delvless"
+  "xray/deltrojan:/usr/bin/deltrojan"
+  "xray/renewvmess:/usr/bin/renewvmess"
+  "xray/renewvless:/usr/bin/renewvless"
+  "xray/renewtrojan:/usr/bin/renewtrojan"
+  "xray/cekvless:/usr/bin/cekvless"
+  "xray/cekvmess:/usr/bin/cekvmess"
+  "xray/cektrojan:/usr/bin/cektrojan"
+  "xray/limit-ip:/usr/bin/limit-ip"
+  "xray/limit-quota:/usr/bin/limit-quota"
+  "xray/unlimit:/usr/bin/unlimit"
+  "xray/ceklimit:/usr/bin/ceklimit"
+  "xray/stats:/usr/bin/stats"
+  "xray/killmulti:/usr/bin/killmulti"
+  "xray/alert-expired:/usr/bin/alert-expired"
+  "xray/change-uuid:/usr/bin/change-uuid"
+  "ssh/addssh:/usr/bin/addssh"
+  "ssh/delssh:/usr/bin/delssh"
+  "ssh/renewssh:/usr/bin/renewssh"
+  "ssh/ceklogssh:/usr/bin/ceklogssh"
+  "ssh/ceklimitssh:/usr/bin/ceklimitssh"
+  "ssh/killssh:/usr/bin/killssh"
+  "tools/update-script:/etc/xydark/tools/update-script"
 )
 
-for file in "${files[@]}"; do
-  dest="/etc/xydark/$(basename "$file")"
-  [[ "$file" == menu/* || "$file" == xray/* || "$file" == tools/* ]] && dest="/usr/bin/$(basename "$file")"
-  wget -q -O "$dest" "$base_url/$file" && chmod +x "$dest"
+for f in "${files[@]}"; do
+  src="${f%%:*}"
+  dst="${f##*:}"
+  mkdir -p "$(dirname "$dst")"
+  wget -q -O "$dst" "$base_url/$src" && chmod +x "$dst"
 done
+
+systemctl daemon-reload >/dev/null 2>&1
+echo -e "\e[1;32m✅ Semua script telah diperbarui.\e[0m"
+read -n1 -s -r -p "Tekan apapun untuk lanjut..." && echo
