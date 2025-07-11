@@ -1,68 +1,75 @@
 #!/bin/bash
-# ◦•●◉✿ Add Trojan WS by xydark ✿◉●•◦
+# ◦•●◉✿ Add TROJAN WS by xydark ✿◉●•◦
 
 # === CONFIG ===
 domain=$(cat /etc/xray/domain)
-user=trojan-$(tr -dc a-z0-9 </dev/urandom | head -c4)
+read -rp "Masukkan username: " user
+[[ -z "$user" ]] && user="trojan-$(tr -dc a-z0-9 </dev/urandom | head -c4)"
+
+read -rp "Masukkan masa aktif (hari): " exp_days
+[[ -z "$exp_days" ]] && exp_days=30
+
 uuid=$(uuidgen)
-exp_days=30
 exp_date=$(date -d "$exp_days days" +"%Y-%m-%d")
 tel_token=$(cat /etc/xydark/bot-token)
 tel_chatid=$(cat /etc/xydark/owner-id)
 
+# === CEK DUPLIKAT ===
+if grep -qw "$user" /etc/xray/config.json; then
+    echo -e "\e[1;31mUsername sudah ada, batalkan.\e[0m"
+    exit 1
+fi
+
 # === TAMBAH KE CONFIG XRAY ===
-cat <<EOF >> /etc/xray/config.json
-### $user $exp_date
-{
-  "password": "$uuid",
-  "email": "$user"
-},
-EOF
+sed -i "/#trojan$/a\### $user $exp_date\
+},{\"password\": \"$uuid\",\"email\": \"$user\"" /etc/xray/config.json
 
 # === LINK TROJAN TLS / NON-TLS ===
 port_tls=443
 port_ntls=80
-trojan_tls="trojan://$uuid@$domain:$port_tls?type=ws&security=tls&host=$domain&path=/trojan#$user"
-trojan_ntls="trojan://$uuid@$domain:$port_ntls?type=ws&security=none&host=$domain&path=/trojan#$user"
+trojan_tls="trojan://${uuid}@${domain}:${port_tls}?type=ws&security=tls&path=/trojanws&host=$domain#$user"
+trojan_ntls="trojan://${uuid}@${domain}:${port_ntls}?type=ws&security=none&path=/trojanws&host=$domain#$user"
 
 # === QR CODE GENERATE ===
 qr_dir="/etc/xray/qr"
 mkdir -p "$qr_dir"
-qrencode -o "$qr_dir/$user-tls.png" "$trojan_tls"
-qrencode -o "$qr_dir/$user-ntls.png" "$trojan_ntls"
+qrencode -o "$qr_dir/$user-trojan-tls.png" "$trojan_tls"
+qrencode -o "$qr_dir/$user-trojan-ntls.png" "$trojan_ntls"
 
-# === TAMPILKAN AKUN DI CLI ===
+# === TAMPILKAN DI TERMINAL ===
 clear
-echo -e "\e[1;35m╔════════════════════════════════════════════╗"
+echo -e "\e[1;36m╔════════════════════════════════════════════╗"
 echo -e "║         BERHASIL BUAT AKUN TROJAN         ║"
 echo -e "╠════════════════════════════════════════════╣"
 echo -e "║ Username : $user"
 echo -e "║ Domain   : $domain"
-echo -e "║ UUID     : $uuid"
+echo -e "║ Password : $uuid"
 echo -e "║ Expired  : $exp_date"
 echo -e "╠════════════════════════════════════════════╣"
-echo -e "║ TLS Link     :\n\e[1;33m$trojan_tls\e[0m"
-echo -e "║ Non-TLS Link :\n\e[1;33m$trojan_ntls\e[0m"
+echo -e "║ TLS Link     :"
+echo -e "\e[1;33m$trojan_tls\e[0m"
+echo -e "║ Non-TLS Link :"
+echo -e "\e[1;33m$trojan_ntls\e[0m"
 echo -e "╚════════════════════════════════════════════╝\e[0m"
 
 # === KIRIM KE TELEGRAM ===
+escaped_tls=$(echo "$trojan_tls" | sed 's/_/\\_/g')
+escaped_ntls=$(echo "$trojan_ntls" | sed 's/_/\\_/g')
 curl -s -X POST https://api.telegram.org/bot$tel_token/sendMessage \
  -d chat_id="$tel_chatid" \
  -d parse_mode="Markdown" \
- -d text="🆕 *Akun Trojan WS Berhasil Dibuat!*
+ -d text="🆕 *Akun TROJAN WS Berhasil Dibuat!*
 
-\`\`\`
-Username : $user
-Domain   : $domain
-UUID     : $uuid
-Expired  : $exp_date
-\`\`\`
+*Username:* \`$user\`
+*Domain:* \`$domain\`
+*Password:* \`$uuid\`
+*Expired:* \`$exp_date\`
 
-🔐 *Trojan TLS:*
-\`$trojan_tls\`
+🔐 *TLS Link:*
+\`$escaped_tls\`
 
-🔓 *Trojan Non-TLS:*
-\`$trojan_ntls\`
+🔓 *Non-TLS Link:*
+\`$escaped_ntls\`
 
 👤 Dibuat oleh Script @xydark"
 
@@ -70,6 +77,6 @@ Expired  : $exp_date
 systemctl restart xray
 
 # === SELESAI ===
-echo -e "\n\e[1;32m✅ Akun Trojan $user berhasil dibuat dan dikirim ke Telegram!\e[0m"
+echo -e "\n\e[1;32m✅ Akun TROJAN $user berhasil dibuat dan dikirim ke Telegram!\e[0m"
 read -n 1 -s -r -p "Tekan tombol apapun untuk kembali ke menu..."
 menu-xray
