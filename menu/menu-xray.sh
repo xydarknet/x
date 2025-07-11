@@ -38,7 +38,7 @@ echo -ne "${bold}Please select an option [0-11]: ${reset}"
 read opt
 
 case $opt in
-    1) menu-createxray ;;
+    1) createxray ;;
     2) trialxray ;;
     3) renewxray ;;
     4) detailxray ;;
