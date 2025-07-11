@@ -26,12 +26,35 @@ systemctl enable xray
 systemctl start xray
 echo -e "✔ Xray Core berhasil diinstall."
 
-# === 4. INPUT DOMAIN & BOT TELE ===
+# === 4. INPUT DOMAIN & BOT ===
 echo -e "▶ Menyiapkan konfigurasi domain & bot..."
 
 mkdir -p /etc/xray
 mkdir -p /etc/xydark
 touch /etc/xydark/approved-ip.json
+
+# === AUTO DETEKSI DOMAIN
+if [[ ! -f /etc/xray/domain || ! -s /etc/xray/domain ]]; then
+    echo -e "🔍 Mendeteksi domain publik dari DNS A record..."
+
+    # Ambil IP VPS
+    my_ip=$(curl -s ipv4.icanhazip.com)
+
+    # Coba ambil domain dari DNS record
+    detected_domain=$(curl -s "https://api.xydark.net/resolve?ip=$my_ip" | grep -oP '(?<="domain":")[^"]+')
+
+    if [[ -n "$detected_domain" ]]; then
+        echo "$detected_domain" > /etc/xray/domain
+        echo -e "✅ Domain otomatis terdeteksi: $detected_domain"
+    else
+        echo -e "❌ Gagal deteksi domain. Silakan input manual."
+        read -rp "Masukkan domain kamu (contoh: vpn.xydark.biz.id): " domain
+        echo "$domain" > /etc/xray/domain
+    fi
+else
+    domain=$(cat /etc/xray/domain)
+    echo -e "✔ Domain sudah ada: $domain"
+fi
 
 # === DOMAIN
 if [[ ! -f /etc/xray/domain ]]; then
