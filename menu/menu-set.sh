@@ -17,8 +17,8 @@ echo -e "║ 8. Cek Statistik Pemakaian Akun XRAY          ║"
 echo -e "║ 9. Atur Auto Reboot VPS Harian                ║"
 echo -e "║ 10. Atur Jadwal Restart Layanan SSH/XRAY      ║"
 echo -e "║ 11. Cek IP Ter-Approve (Whitelist IP)         ║"
-echo -e "║ 12. Ubah Bot Token & Chat ID Telegram         ║"
-echo -e "║ 13. Update Script Otomatis                    ║"
+echo -e "║ 12. Edit Bot Token & Chat ID Telegram         ║"
+echo -e "║ 13. Update Script Otomatis + Auto Backup      ║"
 echo -e "║ 0. Kembali ke Menu Utama                      ║"
 echo -e "╚══════════════════════════════════════════════╝\e[0m"
 read -rp "Pilih menu [0-13]: " opt
@@ -74,19 +74,42 @@ case $opt in
     ;;
   12)
     clear
-    echo "🛠 Edit Token Bot Telegram:"
-    nano /etc/xydark/bot-token
-    echo "🛠 Edit Chat ID Owner Telegram:"
-    nano /etc/xydark/owner-id
+    echo -e "\n🛠 Masukkan *token bot Telegram* baru:"
+    read -rp "Token: " new_token
+    echo -e "\n🛠 Masukkan *Chat ID Telegram Owner*:"
+    read -rp "Chat ID: " new_chatid
+    echo "$new_token" > /etc/xydark/bot-token
+    echo "$new_chatid" > /etc/xydark/owner-id
+
+    cat <<EOF > /etc/xydark/config.json
+{
+  "token": "$new_token",
+  "owner_id": $new_chatid
+}
+EOF
+
+    echo -e "\n✅ Bot token & Chat ID berhasil diperbarui!"
+    systemctl restart xydark-bot
+    sleep 1
     ;;
   13)
     clear
-    echo "🔄 Mengecek update terbaru dari GitHub..."
+    echo "🔄 Mengecek dan mendownload update terbaru..."
+    echo -n "⏳ Loading"
+    for i in {1..3}; do echo -n "."; sleep 0.4; done
+    echo ""
+
     if [[ -x /etc/xydark/tools/update-script ]]; then
+      # Auto backup menu sebelum update
+      backup_dir="/etc/xydark/backup/menu-$(date +%Y%m%d%H%M)"
+      mkdir -p "$backup_dir"
+      cp /usr/bin/menu* "$backup_dir" 2>/dev/null
+      echo "📦 Backup menu disimpan ke: $backup_dir"
+
       bash /etc/xydark/tools/update-script
       echo -e "\n✅ Script berhasil diupdate!"
     else
-      echo "❌ Script update tidak ditemukan!"
+      echo "❌ Script update tidak ditemukan di /etc/xydark/tools/update-script"
     fi
     read -n 1 -s -r -p "Tekan tombol apapun untuk kembali..."
     ;;
