@@ -26,12 +26,90 @@ systemctl enable xray
 systemctl start xray
 echo -e "✔ Xray Core berhasil diinstall."
 
-# === 4. INPUT DOMAIN & BOT ===
+# === 4. INPUT DOMAIN & BOT TELE ===
 echo -e "▶ Menyiapkan konfigurasi domain & bot..."
 
 mkdir -p /etc/xray
 mkdir -p /etc/xydark
 touch /etc/xydark/approved-ip.json
+
+# === DOMAIN
+if [[ ! -f /etc/xray/domain ]]; then
+    read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
+    echo "$domain" > /etc/xray/domain
+else
+    domain=$(cat /etc/xray/domain)
+    echo "✔ Domain terdeteksi: $domain"
+fi
+
+# === BOT TOKEN
+if [[ ! -s /etc/xydark/bot-token ]]; then
+    while true; do
+        read -rp "Masukkan Bot Token Telegram: " tel_token
+        [[ -n "$tel_token" ]] && break || echo "❌ Token tidak boleh kosong!"
+    done
+    echo "$tel_token" > /etc/xydark/bot-token
+else
+    tel_token=$(cat /etc/xydark/bot-token)
+fi
+
+# === CHAT ID OWNER
+if [[ ! -s /etc/xydark/owner-id ]]; then
+    while true; do
+        read -rp "Masukkan Chat ID Telegram (owner): " tel_chatid
+        [[ -n "$tel_chatid" ]] && break || echo "❌ Chat ID tidak boleh kosong!"
+    done
+    echo "$tel_chatid" > /etc/xydark/owner-id
+else
+    tel_chatid=$(cat /etc/xydark/owner-id)
+fi
+
+# === SIMPAN config.json (untuk bot.py)
+cat <<EOF > /etc/xydark/config.json
+{
+  "token": "$tel_token",
+  "owner_id": $tel_chatid
+}
+EOF
+
+# === DOMAIN
+if [[ ! -f /etc/xray/domain ]]; then
+    read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
+    echo "$domain" > /etc/xray/domain
+else
+    domain=$(cat /etc/xray/domain)
+    echo "✔ Domain terdeteksi: $domain"
+fi
+
+# === BOT TOKEN
+if [[ ! -s /etc/xydark/bot-token ]]; then
+    while true; do
+        read -rp "Masukkan Bot Token Telegram: " tel_token
+        [[ -n "$tel_token" ]] && break || echo "❌ Token tidak boleh kosong!"
+    done
+    echo "$tel_token" > /etc/xydark/bot-token
+else
+    tel_token=$(cat /etc/xydark/bot-token)
+fi
+
+# === CHAT ID OWNER
+if [[ ! -s /etc/xydark/owner-id ]]; then
+    while true; do
+        read -rp "Masukkan Chat ID Telegram (owner): " tel_chatid
+        [[ -n "$tel_chatid" ]] && break || echo "❌ Chat ID tidak boleh kosong!"
+    done
+    echo "$tel_chatid" > /etc/xydark/owner-id
+else
+    tel_chatid=$(cat /etc/xydark/owner-id)
+fi
+
+# === SIMPAN config.json (untuk bot.py)
+cat <<EOF > /etc/xydark/config.json
+{
+  "token": "$tel_token",
+  "owner_id": $tel_chatid
+}
+EOF
 
 # Domain
 if [[ ! -f /etc/xray/domain ]]; then
