@@ -80,10 +80,10 @@ else
 fi
 
 
-# Tambahan: menu-createxray
-wget -qO /usr/bin/menu-createxray https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-createxray.sh
+# Install menu-createxray
+echo "▶ Mengunduh script menu-createxray..."
+wget -q -O /usr/bin/menu-createxray https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-createxray.sh
 chmod +x /usr/bin/menu-createxray
-
 
 # Telegram Bot token & chat id
 if [[ ! -s /etc/xydark/bot-token ]]; then
