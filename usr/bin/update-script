@@ -1,0 +1,39 @@
+#!/bin/bash
+# update-script by xydark
+
+echo -e "\e[1;36m▶ Updating semua file script dari GitHub...\e[0m"
+
+# Menu utama
+wget -q -O /usr/bin/menu https://raw.githubusercontent.com/xydarknet/x/main/menu/menu.sh
+wget -q -O /usr/bin/menu-ssh https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-ssh.sh
+wget -q -O /usr/bin/menu-xray https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-xray.sh
+wget -q -O /usr/bin/menu-set https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-set.sh
+
+# Fitur Xray
+wget -q -O /etc/xray/addvless https://raw.githubusercontent.com/xydarknet/x/main/xray/addvless
+wget -q -O /etc/xray/addvmess https://raw.githubusercontent.com/xydarknet/x/main/xray/addvmess
+wget -q -O /etc/xray/addtrojan https://raw.githubusercontent.com/xydarknet/x/main/xray/addtrojan
+wget -q -O /etc/xray/change-uuid https://raw.githubusercontent.com/xydarknet/x/main/xray/change-uuid
+wget -q -O /etc/xray/edit-quota https://raw.githubusercontent.com/xydarknet/x/main/xray/edit-quota
+wget -q -O /etc/xray/edit-iplimit https://raw.githubusercontent.com/xydarknet/x/main/xray/edit-iplimit
+wget -q -O /etc/xray/remove-limit https://raw.githubusercontent.com/xydarknet/x/main/xray/remove-limit
+wget -q -O /etc/xray/check-limit https://raw.githubusercontent.com/xydarknet/x/main/xray/check-limit
+wget -q -O /etc/xray/autokill https://raw.githubusercontent.com/xydarknet/x/main/xray/autokill
+wget -q -O /etc/xray/usage-stats https://raw.githubusercontent.com/xydarknet/x/main/xray/usage-stats
+
+# Fitur System
+wget -q -O /etc/xydark/set-reboot https://raw.githubusercontent.com/xydarknet/x/main/system/set-reboot
+wget -q -O /etc/xydark/restart-schedule https://raw.githubusercontent.com/xydarknet/x/main/system/restart-schedule
+
+# Bot Telegram
+wget -q -O /etc/xydark/bot.py https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.py
+
+# Update permission
+chmod +x /usr/bin/menu*
+chmod +x /etc/xray/*
+chmod +x /etc/xydark/*
+
+# Restart bot
+systemctl restart xydark-bot
+
+echo -e "\e[1;32m✅ Semua script berhasil diperbarui!\e[0m"
