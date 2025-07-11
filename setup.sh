@@ -1,5 +1,5 @@
 #!/bin/bash
-# setup.sh by xydark – Full Auto XRAY + Bot + Domain
+# ====script by ▀▄▀▄XYDARK▄▀▄▀ full auto=====
 
 set -e
 
@@ -23,7 +23,35 @@ echo "▶ Installing Xray..."
 mkdir -p /tmp/xray
 curl -Ls -o /tmp/xray/install.sh https://raw.githubusercontent.com/XTLS/Xray-install/main/install-release.sh
 bash /tmp/xray/install.sh install
-systemctl enable xray && systemctl start xray
+
+# Tambah systemd service untuk XRAY
+echo "▶ Konfigurasi service systemd XRAY..."
+cat > /etc/systemd/system/xray.service <<EOF
+[Unit]
+Description=XRAY Core Service - by xydark
+Documentation=https://github.com/XTLS/Xray-core
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+User=root
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+ExecStart=/usr/local/bin/xray run -config /etc/xray/config.json
+Restart=on-failure
+RestartSec=5s
+LimitNPROC=10000
+LimitNOFILE=1000000
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable xray
+systemctl start xray
 
 # === 4. INPUT DOMAIN & BOT ===
 echo -e "▶ Menyiapkan konfigurasi domain & bot..."
