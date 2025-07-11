@@ -1,86 +1,57 @@
 #!/bin/bash
-# ◦•●◉✿ Add VLESS WS by xydark ✿◉●•◦
 
-# === CONFIG ===
-domain=$(cat /etc/xray/domain)
-read -rp "Masukkan username: " user
-[[ -z "$user" ]] && user="vless-$(tr -dc a-z0-9 </dev/urandom | head -c4)"
-read -rp "Masukkan masa aktif (hari): " exp_days
-[[ -z "$exp_days" ]] && exp_days=30
-uuid=$(uuidgen)
-exp_date=$(date -d "$exp_days days" +"%Y-%m-%d")
-tel_token=$(cat /etc/xydark/bot-token)
-tel_chatid=$(cat /etc/xydark/owner-id)
+◦•●◉✿ Add VLESS WS by xydark ✿◉●•◦
 
-# === INPUT SNI DAN BUG ===
-read -rp "Masukkan SNI (ex: MAS ARGA GANTENG): " sni
-[[ -z "$sni" ]] && sni="$domain"
-read -rp "Masukkan BUG (ex: xydark.biz.id): " bug
-[[ -z "$bug" ]] && bug="$domain"
+=== CONFIG DOMAIN & TELEGRAM ===
 
-# === TAMBAH KE CONFIG XRAY ===
-cat <<EOF >> /etc/xray/config.json
-### $user $exp_date
-{
-  "id": "$uuid",
-  "email": "$user"
-},
-EOF
+domain=$(cat /etc/xray/domain) mkdir -p /etc/xydark
 
-# === LINK VLESS TLS / NON-TLS ===
-vless_tls="vless://$uuid@$sni:443?path=%2Fvlessws&security=tls&encryption=none&host=$bug&type=ws#$user"
-vless_ntls="vless://$uuid@$sni:80?path=%2Fvlessws&security=none&encryption=none&host=$bug&type=ws#$user"
+=== INPUT USERNAME ===
 
-# === QR CODE GENERATE ===
-qr_dir="/etc/xray/qr"
-mkdir -p "$qr_dir"
-qrencode -o "$qr_dir/$user-tls.png" "$vless_tls"
-qrencode -o "$qr_dir/$user-ntls.png" "$vless_ntls"
+while true; do read -rp "Masukkan Username: " user [[ -z "$user" ]] && echo -e "\e[1;31mUsername tidak boleh kosong!\e[0m" && continue grep -qw "$user" /etc/xray/config.json && echo -e "\e[1;31mUsername sudah ada!\e[0m" && continue break done
 
-# === TAMPILKAN AKUN DI CLI ===
-clear
-echo -e "\e[1;36m╔════════════════════════════════════════════╗"
-echo -e "║         BERHASIL BUAT AKUN VLESS          ║"
-echo -e "╠════════════════════════════════════════════╣"
-echo -e "║ Username : $user"
-echo -e "║ Domain   : $domain"
-echo -e "║ UUID     : $uuid"
-echo -e "║ Expired  : $exp_date"
-echo -e "║ SNI      : $sni"
-echo -e "║ BUG      : $bug"
-echo -e "╠════════════════════════════════════════════╣"
-echo -e "║ TLS Link     :"
-echo -e "\e[1;33m$vless_tls\e[0m"
-echo -e "║ Non-TLS Link :"
-echo -e "\e[1;33m$vless_ntls\e[0m"
-echo -e "╚════════════════════════════════════════════╝\e[0m"
+=== INPUT EXPIRED ===
 
-# === KIRIM KE TELEGRAM (gunakan escape agar tidak error) ===
-escaped_tls=$(echo "$vless_tls" | sed 's/\_/\\_/g')
-escaped_ntls=$(echo "$vless_ntls" | sed 's/\_/\\_/g')
-curl -s -X POST https://api.telegram.org/bot$tel_token/sendMessage \
- -d chat_id="$tel_chatid" \
- -d parse_mode="Markdown" \
- -d text="🆕 *Akun VLESS WS Berhasil Dibuat!*
+while true; do read -rp "Masukkan Masa Aktif (hari): " exp_days [[ "$exp_days" =~ ^[0-9]+$ ]] && break echo -e "\e[1;31mInput harus berupa angka!\e[0m" done
 
-*Username:* \`$user\`
-*SNI:* \`$sni\`
-*BUG:* \`$bug\`
-*UUID:* \`$uuid\`
-*Expired:* \`$exp_date\`
+uuid=$(uuidgen) exp_date=$(date -d "+$exp_days days" +"%Y-%m-%d") tel_token=$(cat /etc/xydark/bot-token) tel_chatid=$(cat /etc/xydark/owner-id)
 
-🔐 *TLS Link:*
-\`$escaped_tls\`
+=== SIMPAN KE CONFIG XRAY ===
 
-🔓 *Non-TLS Link:*
-\`$escaped_ntls\`
+sed -i "/#vless$/a### $user $exp_date\n{"id": "$uuid", "email": "$user"}," /etc/xray/config.json
+
+=== GENERATE LINK VLESS ===
+
+vless_tls="vless://$uuid@$domain:443?path=%2Fvlessws&security=tls&encryption=none&host=$domain&type=ws#$user" vless_ntls="vless://$uuid@$domain:80?path=%2Fvlessws&security=none&encryption=none&host=$domain&type=ws#$user"
+
+=== GENERATE QR CODE ===
+
+mkdir -p /etc/xray/qr qrencode -o "/etc/xray/qr/$user-tls.png" "$vless_tls" qrencode -o "/etc/xray/qr/$user-ntls.png" "$vless_ntls"
+
+=== TAMPILKAN INFO DI CLI ===
+
+clear echo -e "\e[1;36m╔══════════════════════════════════════════════╗" echo -e "║         BERHASIL BUAT AKUN VLESS           ║" echo -e "╠══════════════════════════════════════════════╣" echo -e "║ Username : $user" echo -e "║ Domain   : $domain" echo -e "║ UUID     : $uuid" echo -e "║ Expired  : $exp_date" echo -e "╠══════════════════════════════════════════════╣" echo -e "║ TLS Link     :\n\e[1;33m$vless_tls\e[0m" echo -e "║ Non-TLS Link :\n\e[1;33m$vless_ntls\e[0m" echo -e "╚══════════════════════════════════════════════╝"
+
+=== KIRIM KE TELEGRAM ===
+
+escaped_tls=$(echo "$vless_tls" | sed 's//\/g') escaped_ntls=$(echo "$vless_ntls" | sed 's//\/g') curl -s -X POST https://api.telegram.org/bot$tel_token/sendMessage 
+-d chat_id="$tel_chatid" 
+-d parse_mode="Markdown" 
+-d text="🔜 Akun VLESS WS Berhasil Dibuat!
+
+Username: `$user` Domain: `$domain` UUID: `$uuid` Expired: `$exp_date`
+
+🔐 TLS Link: `$escaped_tls`
+
+🔓 Non-TLS Link: `$escaped_ntls`
 
 👤 Dibuat oleh Script @xydark"
 
-# === RESTART XRAY ===
+=== RESTART XRAY ===
+
 systemctl restart xray
 
-# === SELESAI ===
-echo -e "\n\e[1;32m✅ Akun VLESS $user berhasil dibuat dan dikirim ke Telegram!\e[0m"
-read -n 1 -s -r -p "Tekan tombol apapun untuk kembali ke menu..."
-menu-xray
+=== DONE ===
+
+echo -e "\n\e[1;32m✅ Akun VLESS $user berhasil dibuat dan dikirim ke Telegram!\e[0m" read -n 1 -s -r -p "Tekan tombol apapun untuk kembali ke menu..." menu-xray
+
