@@ -1,39 +1,61 @@
+cat << 'EOF' > /usr/bin/update-script
 #!/bin/bash
-# update-script by xydark
+# ◦•●◉✿ update-script by xydark ✿◉●•◦
 
-echo -e "\e[1;36m▶ Updating semua file script dari GitHub...\e[0m"
+echo -e "\e[1;36m▶ Memulai update semua script dari GitHub...\e[0m"
 
-# Menu utama
-wget -q -O /usr/bin/menu https://raw.githubusercontent.com/xydarknet/x/main/menu/menu.sh
-wget -q -O /usr/bin/menu-ssh https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-ssh.sh
-wget -q -O /usr/bin/menu-xray https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-xray.sh
-wget -q -O /usr/bin/menu-set https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-set.sh
+# === URL BASE ===
+base_url="https://raw.githubusercontent.com/xydarknet/x/main"
 
-# Fitur Xray
-wget -q -O /etc/xray/addvless https://raw.githubusercontent.com/xydarknet/x/main/xray/addvless
-wget -q -O /etc/xray/addvmess https://raw.githubusercontent.com/xydarknet/x/main/xray/addvmess
-wget -q -O /etc/xray/addtrojan https://raw.githubusercontent.com/xydarknet/x/main/xray/addtrojan
-wget -q -O /etc/xray/change-uuid https://raw.githubusercontent.com/xydarknet/x/main/xray/change-uuid
-wget -q -O /etc/xray/edit-quota https://raw.githubusercontent.com/xydarknet/x/main/xray/edit-quota
-wget -q -O /etc/xray/edit-iplimit https://raw.githubusercontent.com/xydarknet/x/main/xray/edit-iplimit
-wget -q -O /etc/xray/remove-limit https://raw.githubusercontent.com/xydarknet/x/main/xray/remove-limit
-wget -q -O /etc/xray/check-limit https://raw.githubusercontent.com/xydarknet/x/main/xray/check-limit
-wget -q -O /etc/xray/autokill https://raw.githubusercontent.com/xydarknet/x/main/xray/autokill
-wget -q -O /etc/xray/usage-stats https://raw.githubusercontent.com/xydarknet/x/main/xray/usage-stats
+# === LIST FILE YANG DIUPDATE (file:target) ===
+declare -A files=(
+  ["menu/menu.sh"]="/usr/bin/menu"
+  ["menu/menu-ssh.sh"]="/usr/bin/menu-ssh"
+  ["menu/menu-xray.sh"]="/usr/bin/menu-xray"
+  ["menu/menu-set.sh"]="/usr/bin/menu-set"
+  ["xray/addvless"]="/etc/xray/addvless"
+  ["xray/addvmess"]="/etc/xray/addvmess"
+  ["xray/addtrojan"]="/etc/xray/addtrojan"
+  ["xray/delvless"]="/etc/xray/delvless"
+  ["xray/delvmess"]="/etc/xray/delvmess"
+  ["xray/deltrojan"]="/etc/xray/deltrojan"
+  ["xray/renewvless"]="/etc/xray/renewvless"
+  ["xray/renewvmess"]="/etc/xray/renewvmess"
+  ["xray/renewtrojan"]="/etc/xray/renewtrojan"
+  ["xray/cekvless"]="/etc/xray/cekvless"
+  ["xray/cekvmess"]="/etc/xray/cekvmess"
+  ["xray/cektrojan"]="/etc/xray/cektrojan"
+  ["xray/limit-ip"]="/etc/xray/limit-ip"
+  ["xray/limit-quota"]="/etc/xray/limit-quota"
+  ["xray/unlimit"]="/etc/xray/unlimit"
+  ["xray/ceklimit"]="/etc/xray/ceklimit"
+  ["xray/stats"]="/etc/xray/stats"
+  ["xray/killmulti"]="/etc/xray/killmulti"
+  ["xray/alert-expired"]="/etc/xray/alert-expired"
+  ["xray/change-uuid"]="/etc/xray/change-uuid"
+  ["ssh/addssh"]="/etc/ssh/addssh"
+  ["ssh/delssh"]="/etc/ssh/delssh"
+  ["ssh/renewssh"]="/etc/ssh/renewssh"
+  ["ssh/ceklogssh"]="/etc/ssh/ceklogssh"
+  ["ssh/ceklimitssh"]="/etc/ssh/ceklimitssh"
+  ["ssh/killssh"]="/etc/ssh/killssh"
+  ["set/reboot-vps"]="/etc/xydark/reboot-vps"
+  ["set/autorestart"]="/etc/xydark/autorestart"
+)
 
-# Fitur System
-wget -q -O /etc/xydark/set-reboot https://raw.githubusercontent.com/xydarknet/x/main/system/set-reboot
-wget -q -O /etc/xydark/restart-schedule https://raw.githubusercontent.com/xydarknet/x/main/system/restart-schedule
+# === PROSES UPDATE ===
+for src in "${!files[@]}"; do
+  target="${files[$src]}"
+  mkdir -p "$(dirname "$target")"
+  wget -q -O "$target" "$base_url/$src" && chmod +x "$target"
+done
 
-# Bot Telegram
-wget -q -O /etc/xydark/bot.py https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.py
+# === RELOAD SYSTEMD JIKA PERLU ===
+systemctl daemon-reload >/dev/null 2>&1
 
-# Update permission
-chmod +x /usr/bin/menu*
-chmod +x /etc/xray/*
-chmod +x /etc/xydark/*
+echo -e "\e[1;32m✅ Semua script berhasil diupdate dari GitHub.\e[0m"
+echo -e "\e[1;33mSilakan jalankan 'menu' untuk melihat hasilnya.\e[0m"
+EOF
 
-# Restart bot
-systemctl restart xydark-bot
-
-echo -e "\e[1;32m✅ Semua script berhasil diperbarui!\e[0m"
+# Jadikan executable
+chmod +x /usr/bin/update-script
