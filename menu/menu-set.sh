@@ -28,21 +28,26 @@ read -rp "Pilih menu [0-15]: " opt
 case $opt in
 1)
   clear
-  echo -e "\e[1;36m🌐 GANTI DOMAIN\e[0m"
-  old_domain=$(cat /etc/xray/domain 2>/dev/null || echo "(kosong)")
-  echo -e "🔍 Domain saat ini: \e[33m$old_domain\e[0m"
-  read -rp "📝 Masukkan domain baru: " new_domain
-  if [[ -n "$new_domain" ]]; then
-    echo "$new_domain" > /etc/xray/domain
-    echo -e "\n✅ Domain berhasil diubah menjadi: \e[32m$new_domain\e[0m"
-    systemctl restart xray
-    echo -e "🔁 Service XRAY telah direstart."
-  else
-    echo -e "\e[31m❌ Domain tidak boleh kosong!\e[0m"
-  fi
-  read -n 1 -s -r -p "Tekan tombol apapun untuk kembali..."
+  echo -e "🔧 Masukkan domain baru:"
+  read -rp "Domain: " new_domain
+  echo "$new_domain" > /etc/xray/domain
+  echo -e "✅ Domain berhasil diperbarui: $new_domain"
+  systemctl restart xray
+  sleep 1
   ;;
-2) clear; [[ -x /usr/bin/change-uuid ]] && change-uuid || echo "❌ Script tidak ditemukan!" ;;
+2)
+  clear
+  echo -e "📛 Masukkan username akun XRAY:"
+  read -rp "Username: " user
+  if grep -qw "$user" /etc/xray/config.json; then
+    uuid=$(cat /proc/sys/kernel/random/uuid)
+    sed -i "s/\"$user\".*\"id\": \".*\"/\"$user\", \"id\": \"$uuid\"/" /etc/xray/config.json
+    echo -e "✅ UUID akun \e[32m$user\e[0m telah diganti ke \e[36m$uuid\e[0m"
+    systemctl restart xray
+  else
+    echo -e "❌ User tidak ditemukan!"
+  fi
+  ;;
 3) clear; [[ -x /usr/bin/edit-quota ]] && edit-quota || echo "❌ Script tidak ditemukan!" ;;
 4) clear; [[ -x /usr/bin/edit-iplimit ]] && edit-iplimit || echo "❌ Script tidak ditemukan!" ;;
 5) clear; [[ -x /usr/bin/remove-limit ]] && remove-limit || echo "❌ Script tidak ditemukan!" ;;
@@ -58,7 +63,6 @@ case $opt in
   else
     echo "❌ File approved-ip.json tidak ditemukan!"
   fi
-  read -n 1 -s -r -p "Tekan tombol apapun untuk kembali..."
   ;;
 12)
   clear
