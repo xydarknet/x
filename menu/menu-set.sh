@@ -28,7 +28,7 @@ read -rp "Pilih menu [0-15]: " opt
 case $opt in
 1)
   clear
-  echo -e "\e[1;36m🌐 GANTI DOMAIN XRAY\e[0m"
+  echo -e "\e[1;36m🌐 GANTI DOMAIN\e[0m"
   old_domain=$(cat /etc/xray/domain 2>/dev/null || echo "(kosong)")
   echo -e "🔍 Domain saat ini: \e[33m$old_domain\e[0m"
   read -rp "📝 Masukkan domain baru: " new_domain
