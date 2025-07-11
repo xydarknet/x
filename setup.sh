@@ -25,24 +25,31 @@ curl -Ls -o /tmp/xray/install.sh https://raw.githubusercontent.com/XTLS/Xray-ins
 bash /tmp/xray/install.sh install
 systemctl enable xray && systemctl start xray
 
-# 4. Setup Domain & Bot
-echo "▶ Config domain & Telegram Bot..."
-mkdir -p /etc/xray /etc/xydark /etc/xydark/tools
+# === 4. INPUT DOMAIN & BOT ===
+echo -e "▶ Menyiapkan konfigurasi domain & bot..."
+
+mkdir -p /etc/xray
+mkdir -p /etc/xydark
 touch /etc/xydark/approved-ip.json
 
-# Auto detect or manual domain
-if [[ ! -s /etc/xray/domain ]]; then
-  echo "🔍 Mencoba grab domain via reverse DNS..."
-  DETECT=$(host "$MYIP" | awk '/pointer/ {print $5}' | sed 's/\.$//')
-  if [[ -n "$DETECT" ]]; then
-    echo "$DETECT" | tee /etc/xray/domain
-    echo "✔ Domain terdeteksi: $DETECT"
-  else
-    read -rp "Masukkan domain (e.g. vpn.xydark.biz.id): " MANUAL
-    echo "$MANUAL" | tee /etc/xray/domain
-  fi
+# DOMAIN OTOMATIS ATAU MANUAL
+if [[ ! -f /etc/xray/domain ]]; then
+    echo -e "🔍 Mendeteksi domain otomatis..."
+    myip=$(curl -s ipv4.icanhazip.com)
+    resolved_domain=$(dig +short -x "$myip" | sed 's/\.$//' | grep -Eo '([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}')
+    
+    if [[ -n "$resolved_domain" ]]; then
+        domain="$resolved_domain"
+        echo -e "✅ Domain otomatis terdeteksi: \e[32m$domain\e[0m"
+    else
+        echo -e "⚠️  Tidak bisa mendeteksi domain otomatis."
+        read -rp "🔧 Masukkan domain manual (contoh: vpn.xydark.biz.id): " domain
+    fi
+
+    echo "$domain" > /etc/xray/domain
 else
-  echo "✔ Domain sudah ada: $(cat /etc/xray/domain)"
+    domain=$(cat /etc/xray/domain)
+    echo -e "✔ Domain ditemukan: \e[32m$domain\e[0m"
 fi
 
 # Telegram Bot token & chat id
