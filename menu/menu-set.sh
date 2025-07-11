@@ -67,30 +67,40 @@ case $opt in
   11)
     clear
     if [[ -f /etc/xydark/approved-ip.json ]]; then
-      cat /etc/xydark/approved-ip.json | jq
+      jq . /etc/xydark/approved-ip.json
     else
       echo "❌ File approved-ip.json tidak ditemukan!"
     fi
     ;;
   12)
     clear
-    echo -e "\n🛠 Masukkan *token bot Telegram* baru:"
-    read -rp "Token: " new_token
-    echo -e "\n🛠 Masukkan *Chat ID Telegram Owner*:"
-    read -rp "Chat ID: " new_chatid
-    echo "$new_token" > /etc/xydark/bot-token
-    echo "$new_chatid" > /etc/xydark/owner-id
+    echo -e "\e[1;36m🛠 Masukkan *token bot Telegram* baru:\e[0m"
+    read -rp "Token: " token
+    echo "$token" > /etc/xydark/bot-token
 
+    echo -e "\n\e[1;36m🛠 Masukkan *Chat ID Telegram Owner*:\e[0m"
+    read -rp "Chat ID: " chatid
+    echo "$chatid" > /etc/xydark/owner-id
+
+    # Simpan ke config.json (untuk bot.py)
     cat <<EOF > /etc/xydark/config.json
 {
-  "token": "$new_token",
-  "owner_id": $new_chatid
+  "token": "$token",
+  "owner_id": $chatid
 }
 EOF
 
     echo -e "\n✅ Bot token & Chat ID berhasil diperbarui!"
-    systemctl restart xydark-bot
-    sleep 1
+
+    # Restart bot service jika tersedia
+    if systemctl list-units --type=service | grep -q "xydark-bot.service"; then
+      systemctl restart xydark-bot
+      echo -e "🔄 Service \e[1;32mxydark-bot\e[0m berhasil direstart."
+    else
+      echo -e "\e[1;31m❌ Gagal restart: service \e[1;31mxydark-bot\e[0m tidak ditemukan!\e[0m"
+    fi
+
+    read -n 1 -s -r -p $'\nTekan tombol apapun untuk kembali...'
     ;;
   13)
     clear
@@ -119,36 +129,6 @@ EOF
   *)
     echo -e "\e[1;31m❌ Pilihan tidak valid!\e[0m"
     sleep 1
-    menu-set
+    /usr/bin/menu-set
     ;;
 esac
-12)
-    clear
-    echo -e "\e[1;36m🛠 Masukkan *token bot Telegram* baru:\e[0m"
-    read -rp "Token: " token
-    echo "$token" > /etc/xydark/bot-token
-
-    echo -e "\n\e[1;36m🛠 Masukkan *Chat ID Telegram Owner*:\e[0m"
-    read -rp "Chat ID: " chatid
-    echo "$chatid" > /etc/xydark/owner-id
-
-    # Simpan ke config.json juga (untuk bot.py)
-    cat <<EOF > /etc/xydark/config.json
-{
-  "token": "$token",
-  "owner_id": $chatid
-}
-EOF
-
-    echo -e "\n✅ Bot token & Chat ID berhasil diperbarui!"
-
-    # Restart bot service
-    if systemctl list-units --type=service | grep -q "xydark-bot.service"; then
-      systemctl restart xydark-bot
-      echo -e "🔄 Service \e[1;32mxydark-bot\e[0m telah direstart."
-    else
-      echo -e "\e[1;31m❌ Gagal restart: service xydark-bot tidak ditemukan!\e[0m"
-    fi
-
-    read -n 1 -s -r -p "Tekan tombol apapun untuk kembali..."
-    ;;
