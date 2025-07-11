@@ -120,6 +120,11 @@ for f in addtrojan addtrojanws addtrojangrpc addtrojanhttp; do
     wget -q -O /usr/bin/$f "$BASE_URL/xray/$f"
 done
 
+# Install menu-createxray
+wget -q -O /usr/bin/menu-createxray "$BASE_URL/menu/menu-createxray.sh"
+chmod +x /usr/bin/menu-createxray
+
+
 # === Permissions
 chmod +x /usr/bin/add*
 
