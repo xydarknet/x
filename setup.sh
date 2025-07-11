@@ -1,274 +1,158 @@
 #!/bin/bash
-# setup.sh by xydark
+# setup.sh by xydark – Full Auto XRAY + Bot + Domain
 
-# === 1. DISABLE IPV6 ===
+set -e
+
+# 1. Disable IPv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf
 sysctl -p
 
-# === 2. CEK WHITELIST IP ===
-my_ip=$(curl -s ifconfig.me)
-whitelist_url="https://raw.githubusercontent.com/xydarknet/x/main/whitelist.txt"
-if ! curl -s "$whitelist_url" | grep -wq "$my_ip"; then
-    echo -e "⛔ IP $my_ip tidak diapprove."
-    echo "Silakan hubungi admin Telegram @xydark untuk mendapatkan akses."
-    exit 1
+# 2. Whitelist IP
+MYIP=$(curl -s ifconfig.me)
+WL="https://raw.githubusercontent.com/xydarknet/x/main/whitelist.txt"
+if ! curl -fsSL "$WL" | grep -wq "$MYIP"; then
+  echo "⛔ IP $MYIP belum diapprove. Hubungi admin."
+  exit 1
 else
-    echo "✅ IP $my_ip ditemukan dalam daftar whitelist."
+  echo "✅ IP $MYIP di whitelist."
 fi
 
-# === 3. INSTALL XRAY CORE ===
-echo -e "▶ Menginstall Xray Core..."
+# 3. Install Xray Core
+echo "▶ Installing Xray..."
 mkdir -p /tmp/xray
 curl -Ls -o /tmp/xray/install.sh https://raw.githubusercontent.com/XTLS/Xray-install/main/install-release.sh
 bash /tmp/xray/install.sh install
-systemctl enable xray
-systemctl start xray
-echo -e "✔ Xray Core berhasil diinstall."
+systemctl enable xray && systemctl start xray
 
-# === 4. INPUT DOMAIN & BOT ===
-echo -e "▶ Menyiapkan konfigurasi domain & bot..."
-
-mkdir -p /etc/xray
-mkdir -p /etc/xydark
+# 4. Setup Domain & Bot
+echo "▶ Config domain & Telegram Bot..."
+mkdir -p /etc/xray /etc/xydark /etc/xydark/tools
 touch /etc/xydark/approved-ip.json
 
-# === AUTO DETEKSI DOMAIN
-if [[ ! -f /etc/xray/domain || ! -s /etc/xray/domain ]]; then
-    echo -e "🔍 Mendeteksi domain publik dari DNS A record..."
-
-    # Ambil IP VPS
-    my_ip=$(curl -s ipv4.icanhazip.com)
-
-    # Coba ambil domain dari DNS record
-    detected_domain=$(curl -s "https://api.xydark.net/resolve?ip=$my_ip" | grep -oP '(?<="domain":")[^"]+')
-
-    if [[ -n "$detected_domain" ]]; then
-        echo "$detected_domain" > /etc/xray/domain
-        echo -e "✅ Domain otomatis terdeteksi: $detected_domain"
-    else
-        echo -e "❌ Gagal deteksi domain. Silakan input manual."
-        read -rp "Masukkan domain kamu (contoh: vpn.xydark.biz.id): " domain
-        echo "$domain" > /etc/xray/domain
-    fi
+# Auto detect or manual domain
+if [[ ! -s /etc/xray/domain ]]; then
+  echo "🔍 Mencoba grab domain via reverse DNS..."
+  DETECT=$(host "$MYIP" | awk '/pointer/ {print $5}' | sed 's/\.$//')
+  if [[ -n "$DETECT" ]]; then
+    echo "$DETECT" | tee /etc/xray/domain
+    echo "✔ Domain terdeteksi: $DETECT"
+  else
+    read -rp "Masukkan domain (e.g. vpn.xydark.biz.id): " MANUAL
+    echo "$MANUAL" | tee /etc/xray/domain
+  fi
 else
-    domain=$(cat /etc/xray/domain)
-    echo -e "✔ Domain sudah ada: $domain"
+  echo "✔ Domain sudah ada: $(cat /etc/xray/domain)"
 fi
 
-# === DOMAIN
-if [[ ! -f /etc/xray/domain ]]; then
-    read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
-    echo "$domain" > /etc/xray/domain
-else
-    domain=$(cat /etc/xray/domain)
-    echo "✔ Domain terdeteksi: $domain"
-fi
-
-# === BOT TOKEN
+# Telegram Bot token & chat id
 if [[ ! -s /etc/xydark/bot-token ]]; then
-    while true; do
-        read -rp "Masukkan Bot Token Telegram: " tel_token
-        [[ -n "$tel_token" ]] && break || echo "❌ Token tidak boleh kosong!"
-    done
-    echo "$tel_token" > /etc/xydark/bot-token
-else
-    tel_token=$(cat /etc/xydark/bot-token)
+  read -rp "Masukkan Bot Token Telegram: " TKN
+  echo "$TKN" > /etc/xydark/bot-token
 fi
-
-# === CHAT ID OWNER
 if [[ ! -s /etc/xydark/owner-id ]]; then
-    while true; do
-        read -rp "Masukkan Chat ID Telegram (owner): " tel_chatid
-        [[ -n "$tel_chatid" ]] && break || echo "❌ Chat ID tidak boleh kosong!"
-    done
-    echo "$tel_chatid" > /etc/xydark/owner-id
-else
-    tel_chatid=$(cat /etc/xydark/owner-id)
+  read -rp "Masukkan Chat ID Telegram: " CID
+  echo "$CID" > /etc/xydark/owner-id
 fi
 
-# === SIMPAN config.json (untuk bot.py)
-cat <<EOF > /etc/xydark/config.json
-{
-  "token": "$tel_token",
-  "owner_id": $tel_chatid
-}
+# Generate config.json
+cat > /etc/xydark/config.json <<EOF
+{"token":"$(cat /etc/xydark/bot-token)","owner_id":$(cat /etc/xydark/owner-id)}
 EOF
 
-# === DOMAIN
-if [[ ! -f /etc/xray/domain ]]; then
-    read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
-    echo "$domain" > /etc/xray/domain
-else
-    domain=$(cat /etc/xray/domain)
-    echo "✔ Domain terdeteksi: $domain"
-fi
-
-# === BOT TOKEN
-if [[ ! -s /etc/xydark/bot-token ]]; then
-    while true; do
-        read -rp "Masukkan Bot Token Telegram: " tel_token
-        [[ -n "$tel_token" ]] && break || echo "❌ Token tidak boleh kosong!"
-    done
-    echo "$tel_token" > /etc/xydark/bot-token
-else
-    tel_token=$(cat /etc/xydark/bot-token)
-fi
-
-# === CHAT ID OWNER
-if [[ ! -s /etc/xydark/owner-id ]]; then
-    while true; do
-        read -rp "Masukkan Chat ID Telegram (owner): " tel_chatid
-        [[ -n "$tel_chatid" ]] && break || echo "❌ Chat ID tidak boleh kosong!"
-    done
-    echo "$tel_chatid" > /etc/xydark/owner-id
-else
-    tel_chatid=$(cat /etc/xydark/owner-id)
-fi
-
-# === SIMPAN config.json (untuk bot.py)
-cat <<EOF > /etc/xydark/config.json
-{
-  "token": "$tel_token",
-  "owner_id": $tel_chatid
-}
-EOF
-
-# Domain
-if [[ ! -f /etc/xray/domain ]]; then
-    read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
-    echo "$domain" > /etc/xray/domain
-else
-    domain=$(cat /etc/xray/domain)
-    echo "✔ Domain terdeteksi: $domain"
-fi
-
-# Token Telegram
-if [[ ! -s /etc/xydark/bot-token ]]; then
-    read -rp "Masukkan Bot Token Telegram: " tel_token
-    echo "$tel_token" > /etc/xydark/bot-token
-else
-    tel_token=$(cat /etc/xydark/bot-token)
-fi
-
-# Chat ID
-if [[ ! -s /etc/xydark/owner-id ]]; then
-    read -rp "Masukkan Chat ID Telegram (owner): " tel_chatid
-    echo "$tel_chatid" > /etc/xydark/owner-id
-else
-    tel_chatid=$(cat /etc/xydark/owner-id)
-fi
-
-# === Simpan config.json untuk bot ===
-cat <<EOF > /etc/xydark/config.json
-{
-  "token": "$tel_token",
-  "owner_id": $tel_chatid
-}
-EOF
-
-# === 5. PASANG SYSTEM INFO SAAT LOGIN ===
-echo -e "▶ Menambahkan info sistem ke login..."
-wget -q -O /etc/xydark/system-info.sh https://raw.githubusercontent.com/xydarknet/x/main/system-info.sh
+# 5. Pasang System Info saat login
+echo "▶ Pasang system-info login..."
+wget -qO /etc/xydark/system-info.sh https://raw.githubusercontent.com/xydarknet/x/main/system-info.sh
 chmod +x /etc/xydark/system-info.sh
-[[ $(grep -c system-info.sh /root/.bashrc) == 0 ]] && echo "bash /etc/xydark/system-info.sh" >> /root/.bashrc
+grep -qxF "bash /etc/xydark/system-info.sh" /root/.bashrc || echo "bash /etc/xydark/system-info.sh" >> /root/.bashrc
 
-# === 6. PASANG SCRIPT XRAY (Add) ===
-echo -e "▶ Menginstall script XRAY..."
+# 6. Install XRAY add scripts
+echo "▶ Pasang addvmess, addvless, addtrojan..."
+for scr in addvmess addvless addtrojan; do
+  wget -qO /etc/xray/$scr https://raw.githubusercontent.com/xydarknet/x/main/xray/$scr
+  chmod +x /etc/xray/$scr
+  ln -sf /etc/xray/$scr /usr/bin/$scr
+done
 
-# VMess
-wget -q -O /etc/xray/addvmess https://raw.githubusercontent.com/xydarknet/x/main/xray/addvmess
-chmod +x /etc/xray/addvmess && ln -sf /etc/xray/addvmess /usr/bin/addvmess
-
-# VLESS
-wget -q -O /etc/xray/addvless https://raw.githubusercontent.com/xydarknet/x/main/xray/addvless
-chmod +x /etc/xray/addvless && ln -sf /etc/xray/addvless /usr/bin/addvless
-
-# Trojan
-wget -q -O /etc/xray/addtrojan https://raw.githubusercontent.com/xydarknet/x/main/xray/addtrojan
-chmod +x /etc/xray/addtrojan && ln -sf /etc/xray/addtrojan /usr/bin/addtrojan
-
-# === 7. INSTALL PYTHON & TELEGRAM BOT ===
-echo -e "▶ Install Python dan Bot Telegram..."
-apt install python3 python3-pip -y
+# 7. Install Python + Telegram Bot
+echo "▶ Install Python & Telegram Bot..."
+apt update -y && apt install python3-pip -y
 pip3 install python-telegram-bot==20.3 httpx
-
 mkdir -p /etc/xydark/bot
-wget -q -O /etc/xydark/bot/bot.py https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.py
-wget -q -O /etc/xydark/bot/bot.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.conf
-wget -q -O /etc/xydark/bot/owner.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/owner.conf
-wget -q -O /etc/xydark/bot/allowed.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/allowed.conf
+for f in bot.py bot.conf owner.conf allowed.conf; do
+  wget -qO /etc/xydark/bot/$f https://raw.githubusercontent.com/xydarknet/x/main/bot/$f
+done
 
-# === 8. SISTEM PERSETUJUAN IP ===
-echo -e "▶ Menyiapkan sistem approval IP..."
-
-# request-ip.sh
-cat << 'EOF' > /etc/xydark/request-ip.sh
+# 8. Setup IP approval system via Telegram
+echo "▶ Setup IP approval system..."
+cat > /etc/xydark/request-ip.sh <<'EOF'
 #!/bin/bash
 token=$(cat /etc/xydark/bot-token)
-chatid=$(cat /etc/xydark/owner-id)
+cid=$(cat /etc/xydark/owner-id)
 ip=$(curl -s ifconfig.me)
-hostname=$(hostname)
-message="🛑 *Permintaan IP Baru*\nHostname: \`$hostname\`\nIP: \`$ip\`\n\nKlik tombol di bawah untuk Approve atau Reject."
-keyboard='{"inline_keyboard":[[{"text":"✅ Approve 30d","callback_data":"approve_30d_'$ip'"},{"text":"❌ Reject","callback_data":"reject_'$ip'"}]]}'
-curl -s -X POST "https://api.telegram.org/bot$token/sendMessage" \
-  -d chat_id="$chatid" -d text="$message" -d parse_mode="Markdown" \
-  -d reply_markup="$keyboard" >/dev/null
+host=$(hostname)
+msg="🛑 New VPS IP request!\nHostname: \`$host\`\nIP: \`$ip\`"
+kb='{"inline_keyboard":[[{"text":"✅ Approve","callback_data":"approve_30d_'$ip'"},{"text":"❌ Reject","callback_data":"reject_'$ip'"}]]}'
+curl -s -X POST "https://api.telegram.org/bot$token/sendMessage" -d chat_id="$cid" -d text="$msg" -d parse_mode="Markdown" -d reply_markup="$kb"
 EOF
 chmod +x /etc/xydark/request-ip.sh
 
-# check-ip.sh
-cat << 'EOF' > /etc/xydark/check-ip.sh
+cat > /etc/xydark/check-ip.sh <<'EOF'
 #!/bin/bash
 ip=$(curl -s ifconfig.me)
-file="/etc/xydark/approved-ip.json"
-[[ ! -f "$file" ]] && echo "[]" > "$file"
-if ! grep -q "$ip" "$file"; then
-  echo -e "\e[1;31mIP $ip belum diapprove. Mengirim permintaan...\e[0m"
+f=/etc/xydark/approved-ip.json
+[[ ! -f "$f" ]] && echo "[]" > "$f"
+if ! grep -q "$ip" "$f"; then
   bash /etc/xydark/request-ip.sh
-  echo -e "\e[1;33mMenunggu approval dari Telegram owner...\e[0m"
   exit 1
 fi
 EOF
 chmod +x /etc/xydark/check-ip.sh
+grep -qxF "bash /etc/xydark/check-ip.sh || exit" /root/.bashrc || echo "bash /etc/xydark/check-ip.sh || exit" >> /root/.bashrc
 
-# Tambahkan ke bashrc
-[[ $(grep -c check-ip.sh /root/.bashrc) == 0 ]] && echo "bash /etc/xydark/check-ip.sh || exit" >> /root/.bashrc
-
-# === 9. SYSTEMD BOT SERVICE ===
-echo -e "▶ Menyiapkan service Bot Telegram..."
-cat << EOF > /etc/systemd/system/xydark-bot.service
+# 9. Setup Telegram Bot service
+echo "▶ Pasang service Bot Telegram..."
+cat > /etc/systemd/system/xydark-bot.service <<EOF
 [Unit]
 Description=XYDARK Telegram Bot
 After=network.target
-
 [Service]
 ExecStart=/usr/bin/python3 /etc/xydark/bot/bot.py
-WorkingDirectory=/etc/xydark/bot
 Restart=always
 User=root
-
 [Install]
 WantedBy=multi-user.target
 EOF
-
-systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable xydark-bot
 systemctl start xydark-bot
-echo -e "✅ Telegram Bot berhasil diaktifkan!"
 
-# === 10. PASANG MENU UTAMA & SUBMENU ===
-echo -e "▶ Mengunduh dan mengaktifkan menu CLI..."
-wget -q -O /usr/bin/menu https://raw.githubusercontent.com/xydarknet/x/main/menu/menu.sh
-wget -q -O /usr/bin/menu-ssh https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-ssh.sh
-wget -q -O /usr/bin/menu-xray https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-xray.sh
-wget -q -O /usr/bin/menu-set https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-set.sh
-chmod +x /usr/bin/menu /usr/bin/menu-ssh /usr/bin/menu-xray /usr/bin/menu-set
+# 10. Install menu CLI
+echo "▶ Pasang menu CLI..."
+for m in menu menu-ssh menu-xray menu-set; do
+  wget -qO /usr/bin/$m https://raw.githubusercontent.com/xydarknet/x/main/menu/$m.sh
+  chmod +x /usr/bin/$m
+done
+grep -qxF "menu" /root/.bashrc || echo "menu" >> /root/.bashrc
 
-[[ $(grep -c "/usr/bin/menu" /root/.bashrc) == 0 ]] && echo "menu" >> /root/.bashrc
+# 11. Install update-script
+cat > /etc/xydark/tools/update-script <<'EOF'
+#!/bin/bash
+echo "▶ Mengunduh update terbaru..."
+cd /etc/xydark
+for m in /usr/bin/menu*; do cp "$m" "$m.bak.$(date +%Y%m%d)"
+done
+cd /usr/bin
+wget -q https://raw.githubusercontent.com/xydarknet/x/main/menu/menu.sh
+wget -q https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-xray.sh
+wget -q https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-ssh.sh
+wget -q https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-set.sh
+chmod +x menu*
+echo "✅ Semua script telah diperbarui."
+EOF
+chmod +x /etc/xydark/tools/update-script
+ln -sf /etc/xydark/tools/update-script /usr/bin/update-script
 
-# === DONE ===
+# Done!
 clear
-echo -e "\n\033[1;32m✅ SETUP SELESAI!\033[0m"
-echo -e "Silakan login ulang atau ketik: \033[1;36mmenu\033[0m"
+echo -e "\n✅ SETUP SELESAI! Ketik: \e[1;36mmenu\e[0m\n"
