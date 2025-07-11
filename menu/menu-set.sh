@@ -122,3 +122,33 @@ EOF
     menu-set
     ;;
 esac
+12)
+    clear
+    echo -e "\e[1;36m🛠 Masukkan *token bot Telegram* baru:\e[0m"
+    read -rp "Token: " token
+    echo "$token" > /etc/xydark/bot-token
+
+    echo -e "\n\e[1;36m🛠 Masukkan *Chat ID Telegram Owner*:\e[0m"
+    read -rp "Chat ID: " chatid
+    echo "$chatid" > /etc/xydark/owner-id
+
+    # Simpan ke config.json juga (untuk bot.py)
+    cat <<EOF > /etc/xydark/config.json
+{
+  "token": "$token",
+  "owner_id": $chatid
+}
+EOF
+
+    echo -e "\n✅ Bot token & Chat ID berhasil diperbarui!"
+
+    # Restart bot service
+    if systemctl list-units --type=service | grep -q "xydark-bot.service"; then
+      systemctl restart xydark-bot
+      echo -e "🔄 Service \e[1;32mxydark-bot\e[0m telah direstart."
+    else
+      echo -e "\e[1;31m❌ Gagal restart: service xydark-bot tidak ditemukan!\e[0m"
+    fi
+
+    read -n 1 -s -r -p "Tekan tombol apapun untuk kembali..."
+    ;;
