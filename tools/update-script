@@ -1,1 +1,34 @@
+#!/bin/bash
+# ◦•●◉✿ Update Script by xydark ✿◉●•◦
 
+echo -e "\e[1;36m▶ Memulai update script...\e[0m"
+
+# Menu CLI
+wget -q -O /usr/bin/menu https://raw.githubusercontent.com/xydarknet/x/main/menu/menu.sh
+wget -q -O /usr/bin/menu-ssh https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-ssh.sh
+wget -q -O /usr/bin/menu-xray https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-xray.sh
+wget -q -O /usr/bin/menu-set https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-set.sh
+
+# Script Xray
+wget -q -O /etc/xray/addvmess https://raw.githubusercontent.com/xydarknet/x/main/xray/addvmess
+wget -q -O /etc/xray/addvless https://raw.githubusercontent.com/xydarknet/x/main/xray/addvless
+wget -q -O /etc/xray/addtrojan https://raw.githubusercontent.com/xydarknet/x/main/xray/addtrojan
+
+# Bot Telegram
+wget -q -O /etc/xydark/bot/bot.py https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.py
+wget -q -O /etc/xydark/bot/bot.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/bot.conf
+wget -q -O /etc/xydark/bot/owner.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/owner.conf
+wget -q -O /etc/xydark/bot/allowed.conf https://raw.githubusercontent.com/xydarknet/x/main/bot/allowed.conf
+
+# System Info
+wget -q -O /etc/xydark/system-info.sh https://raw.githubusercontent.com/xydarknet/x/main/system-info.sh
+
+# Perizinan
+chmod +x /usr/bin/menu /usr/bin/menu-* /etc/xray/* /etc/xydark/bot/* /etc/xydark/system-info.sh
+
+# Restart bot
+systemctl restart xydark-bot
+
+echo -e "\n\e[1;32m✅ Semua script berhasil diperbarui ke versi terbaru.\e[0m"
+read -n 1 -s -r -p "Tekan tombol apapun untuk kembali ke menu..."
+menu
