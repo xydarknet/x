@@ -24,25 +24,78 @@ echo -e "╚══════════════════════�
 read -rp "Pilih menu [0-13]: " opt
 
 case $opt in
-  1) clear; nano /etc/xray/domain ;;
-  2) clear; /etc/xray/change-uuid ;;
-  3) clear; /etc/xray/edit-quota ;;
-  4) clear; /etc/xray/edit-iplimit ;;
-  5) clear; /etc/xray/remove-limit ;;
-  6) clear; /etc/xray/check-limit ;;
-  7) clear; /etc/xray/autokill ;;
-  8) clear; /etc/xray/usage-stats ;;
-  9) clear; /etc/xydark/set-reboot ;;
- 10) clear; /etc/xydark/restart-schedule ;;
- 11) clear; cat /etc/xydark/approved-ip.json | jq ;;
- 12)
+  1)
     clear
-    echo "Edit Token Bot Telegram:"
+    nano /etc/xray/domain
+    ;;
+  2)
+    clear
+    [[ -x /usr/bin/change-uuid ]] && change-uuid || echo "❌ Script tidak ditemukan!"
+    ;;
+  3)
+    clear
+    [[ -x /usr/bin/edit-quota ]] && edit-quota || echo "❌ Script tidak ditemukan!"
+    ;;
+  4)
+    clear
+    [[ -x /usr/bin/edit-iplimit ]] && edit-iplimit || echo "❌ Script tidak ditemukan!"
+    ;;
+  5)
+    clear
+    [[ -x /usr/bin/remove-limit ]] && remove-limit || echo "❌ Script tidak ditemukan!"
+    ;;
+  6)
+    clear
+    [[ -x /usr/bin/check-limit ]] && check-limit || echo "❌ Script tidak ditemukan!"
+    ;;
+  7)
+    clear
+    [[ -x /usr/bin/autokill ]] && autokill || echo "❌ Script tidak ditemukan!"
+    ;;
+  8)
+    clear
+    [[ -x /usr/bin/usage-stats ]] && usage-stats || echo "❌ Script tidak ditemukan!"
+    ;;
+  9)
+    clear
+    [[ -x /usr/bin/set-reboot ]] && set-reboot || echo "❌ Script tidak ditemukan!"
+    ;;
+  10)
+    clear
+    [[ -x /usr/bin/restart-schedule ]] && restart-schedule || echo "❌ Script tidak ditemukan!"
+    ;;
+  11)
+    clear
+    if [[ -f /etc/xydark/approved-ip.json ]]; then
+      cat /etc/xydark/approved-ip.json | jq
+    else
+      echo "❌ File approved-ip.json tidak ditemukan!"
+    fi
+    ;;
+  12)
+    clear
+    echo "🛠 Edit Token Bot Telegram:"
     nano /etc/xydark/bot-token
-    echo "Edit Chat ID Owner Telegram:"
+    echo "🛠 Edit Chat ID Owner Telegram:"
     nano /etc/xydark/owner-id
     ;;
- 13) update-script ;;
-  0) menu ;;
-  *) echo -e "\e[1;31mPilihan tidak valid!\e[0m"; sleep 1; menu-set ;;
+  13)
+    clear
+    echo "🔄 Mengecek update terbaru dari GitHub..."
+    if [[ -x /etc/xydark/tools/update-script ]]; then
+      bash /etc/xydark/tools/update-script
+      echo -e "\n✅ Script berhasil diupdate!"
+    else
+      echo "❌ Script update tidak ditemukan!"
+    fi
+    read -n 1 -s -r -p "Tekan tombol apapun untuk kembali..."
+    ;;
+  0)
+    menu
+    ;;
+  *)
+    echo -e "\e[1;31m❌ Pilihan tidak valid!\e[0m"
+    sleep 1
+    menu-set
+    ;;
 esac
