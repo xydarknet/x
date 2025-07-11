@@ -100,13 +100,28 @@ wget -qO /etc/xydark/system-info.sh https://raw.githubusercontent.com/xydarknet/
 chmod +x /etc/xydark/system-info.sh
 grep -qxF "bash /etc/xydark/system-info.sh" /root/.bashrc || echo "bash /etc/xydark/system-info.sh" >> /root/.bashrc
 
-# 6. Install XRAY add scripts
-echo "▶ Pasang addvmess, addvless, addtrojan..."
-for scr in addvmess addvless addtrojan; do
-  wget -qO /etc/xray/$scr https://raw.githubusercontent.com/xydarknet/x/main/xray/$scr
-  chmod +x /etc/xray/$scr
-  ln -sf /etc/xray/$scr /usr/bin/$scr
+# ===============================
+# 6. XRAY ADD PROTOCOL SCRIPTS
+# ===============================
+echo -e "\e[36m[ INFO ] Downloading XRAY protocol scripts...\e[0m"
+
+# === VMESS
+for f in addvmess addvmessgrpc addvmesshttp; do
+    wget -q -O /usr/bin/$f "$BASE_URL/xray/$f"
 done
+
+# === VLESS
+for f in addvless addvlessgrpc addvlesshttp addvlessxtls; do
+    wget -q -O /usr/bin/$f "$BASE_URL/xray/$f"
+done
+
+# === TROJAN
+for f in addtrojan addtrojanws addtrojangrpc addtrojanhttp; do
+    wget -q -O /usr/bin/$f "$BASE_URL/xray/$f"
+done
+
+# === Permissions
+chmod +x /usr/bin/add*
 
 # 7. Install Python + Telegram Bot
 echo "▶ Install Python & Telegram Bot..."
