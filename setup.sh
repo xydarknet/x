@@ -79,6 +79,12 @@ else
     echo -e "✔ Domain ditemukan: \e[32m$domain\e[0m"
 fi
 
+
+# Tambahan: menu-createxray
+wget -qO /usr/bin/menu-createxray https://raw.githubusercontent.com/xydarknet/x/main/menu/menu-createxray.sh
+chmod +x /usr/bin/menu-createxray
+
+
 # Telegram Bot token & chat id
 if [[ ! -s /etc/xydark/bot-token ]]; then
   read -rp "Masukkan Bot Token Telegram: " TKN
