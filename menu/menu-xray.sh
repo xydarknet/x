@@ -1,44 +1,54 @@
 #!/bin/bash
-# menu-xray FULL by xydark
+# ◦•●◉✿ menu XRAY by xydark ✿◉●•◦
+
+# Warna
+green="\e[32m"
+red="\e[31m"
+blue="\e[34m"
+yellow="\e[33m"
+cyan="\e[36m"
+bold="\e[1m"
+reset="\e[0m"
+
+# Info
+script_version="1.0.0"
+xray_version=$(xray version 2>/dev/null | grep -i 'Xray' | head -n1 | awk '{print $2}')
 
 clear
-echo -e "\e[1;36m╔══════════════════════════════════════════════╗"
-echo -e "║        XRAY PANEL – VMess / VLESS / Trojan   ║"
-echo -e "║                by t.me/xydark                ║"
-echo -e "╠══════════════════════════════════════════════╣"
-echo -e "║ 1. Tambah Akun VMess WS                      ║"
-echo -e "║ 2. Tambah Akun VLESS WS                      ║"
-echo -e "║ 3. Tambah Akun Trojan WS                     ║"
-echo -e "║ 4. Hapus Akun VMess / VLESS / Trojan         ║"
-echo -e "║ 5. Perpanjang Masa Aktif Akun XRAY           ║"
-echo -e "║ 6. Ganti UUID Akun XRAY                      ║"
-echo -e "║ 7. Cek Login Aktif (Realtime XRAY)           ║"
-echo -e "║ 8. Limit Kuota Akun XRAY                     ║"
-echo -e "║ 9. Limit IP Login Akun XRAY                  ║"
-echo -e "║ 10. Hapus Limit Kuota / IP XRAY              ║"
-echo -e "║ 11. Cek Limit Sisa Kuota & IP XRAY           ║"
-echo -e "║ 12. Detail Statistik Pemakaian Per Akun      ║"
-echo -e "║ 13. Auto Kill Multi-Login Melebihi Limit     ║"
-echo -e "║ 14. Auto Alert Expired (3 Hari Sebelum)      ║"
-echo -e "║ 0. Kembali ke Menu Utama                     ║"
-echo -e "╚══════════════════════════════════════════════╝\e[0m"
-read -rp " Pilih menu [0-14]: " xray
+echo -e "${cyan}${bold}SCRIPT VERSION: ${script_version}${reset}"
+echo -e "${green}╔════════════════════════════════════╗"
+echo -e "${green}║            ${bold}MENU XRAY${reset}${green}              ║"
+echo -e "${green}╚════════════════════════════════════╝"
+echo -e "${yellow}Xray Version: ${xray_version}${reset}"
+echo -e "${green}======================================${reset}"
+echo -e "${bold} 1${reset}. Create XRAY"
+echo -e "${bold} 2${reset}. Trial XRAY"
+echo -e "${bold} 3${reset}. Renew XRAY"
+echo -e "${bold} 4${reset}. Detail XRAY"
+echo -e "${bold} 5${reset}. Delete XRAY"
+echo -e "${bold} 6${reset}. Check XRAY Login"
+echo -e "${bold} 7${reset}. Change XRAY Path"
+echo -e "${bold} 8${reset}. Change Limit or Add Limit IP"
+echo -e "${bold} 9${reset}. Change Limit or Add Limit Quota"
+echo -e "${bold}10${reset}. Unban XRAY"
+echo -e "${bold}11${reset}. List Users Expiring Within 3 Days"
+echo -e "${bold} 0${reset}. Back to Main Menu"
+echo -e "${green}======================================${reset}"
+echo -ne "${bold}Please select an option [0-11]: ${reset}"
+read opt
 
-case "$xray" in
-    1) addvmess ;;
-    2) addvless ;;
-    3) addtrojan ;;
-    4) delxray ;;
-    5) renewxray ;;
-    6) changeuuid ;;
-    7) ceklogxray ;;
-    8) limit-quota ;;
-    9) limit-ip ;;
-   10) removelimit ;;
-   11) ceklimitxray ;;
-   12) xray-usage ;;
-   13) autokill-xray ;;
-   14) expired-alert ;;
+case $opt in
+    1) addxray ;;
+    2) trialxray ;;
+    3) renewxray ;;
+    4) detailxray ;;
+    5) delxray ;;
+    6) cekloginxray ;;
+    7) changepathxray ;;
+    8) limitipxray ;;
+    9) limitquotaxray ;;
+    10) unbanxray ;;
+    11) exp3xray ;;
     0) menu ;;
-    *) echo -e "\e[1;31m❌ Pilihan tidak valid!\e[0m"; sleep 1; menu-xray ;;
+    *) echo -e "${red}Invalid option!${reset}"; sleep 2; menu-xray ;;
 esac
