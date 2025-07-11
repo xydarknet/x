@@ -1,116 +1,114 @@
 #!/bin/bash
 # ◦•●◉✿ addvless by xydark ✿◉●•◦
 
-# === VARIABEL DASAR ===
-domain=$(cat /etc/xray/domain)
-read -rp "Username : " user
+# === 1. CEK DOMAIN ===
+if [[ ! -f /etc/xray/domain ]]; then
+    echo -e "\e[1;31m❌ File /etc/xray/domain tidak ditemukan!"
+    read -rp "Masukkan domain (contoh: vpn.xydark.biz.id): " domain
+    mkdir -p /etc/xray
+    echo "$domain" > /etc/xray/domain
+else
+    domain=$(cat /etc/xray/domain)
+fi
+
+# === 2. PENGATURAN AKUN ===
+read -rp "Masukkan username: " user
 read -rp "Masa aktif (hari): " masaaktif
 uuid=$(cat /proc/sys/kernel/random/uuid)
-exp=$(date -d "$masaaktif days" +"%Y-%m-%d")
+exp=$(date -d "$masaaktif days" +%Y-%m-%d)
 
-# === PORT DEFAULT (BISA DISESUAIKAN) ===
-tls_port=443
-ntls_port=80
-path_ws="/vlessws"
-
-# === TAMBAH KE CONFIG XRAY ===
-cat <<EOF >> /etc/xray/config.json
-### VLESS WS TLS $user
+# === 3. SIMPAN KONFIG VLESS WS TLS & NON-TLS ===
+mkdir -p /etc/xray/config-user
+cat <<EOF > /etc/xray/config-user/vless-$user.json
 {
-  "log": {
-    "loglevel": "none"
-  },
-  "inbounds": [{
-    "port": $tls_port,
-    "protocol": "vless",
-    "settings": {
-      "clients": [
-        {
-          "id": "$uuid",
-          "flow": "",
-          "email": "$user"
-        }
-      ],
-      "decryption": "none"
-    },
-    "streamSettings": {
-      "network": "ws",
-      "security": "tls",
-      "tlsSettings": {
-        "certificates": [
-          {
-            "certificateFile": "/etc/xray/xray.crt",
-            "keyFile": "/etc/xray/xray.key"
-          }
-        ]
-      },
-      "wsSettings": {
-        "path": "$path_ws"
-      }
-    }
-  },
-  {
-    "port": $ntls_port,
-    "protocol": "vless",
-    "settings": {
-      "clients": [
-        {
-          "id": "$uuid",
-          "flow": "",
-          "email": "$user"
-        }
-      ],
-      "decryption": "none"
-    },
-    "streamSettings": {
-      "network": "ws",
-      "security": "none",
-      "wsSettings": {
-        "path": "$path_ws"
-      }
-    }
-  }]
+  "user": "$user",
+  "uuid": "$uuid",
+  "exp": "$exp"
 }
 EOF
 
-# === LINK VLESS ===
-vless_tls="vless://${uuid}@${domain}:${tls_port}?path=%2Fvlessws&security=tls&encryption=none&type=ws#${user}"
-vless_ntls="vless://${uuid}@${domain}:${ntls_port}?path=%2Fvlessws&encryption=none&type=ws#${user}"
+# Simpan ke config TLS
+cat <<EOF >> /etc/xray/config.json
+### VLESS TLS $user
+{
+  "inbound": {
+    "port": 443,
+    "protocol": "vless",
+    "settings": {
+      "clients": [{"id": "$uuid","email": "$user"}],
+      "decryption": "none"
+    },
+    "streamSettings": {
+      "network": "ws",
+      "wsSettings": {"path": "/vless"},
+      "security": "tls",
+      "tlsSettings": {"certificates": [{"certificateFile": "/etc/xray/xray.crt","keyFile": "/etc/xray/xray.key"}]}
+    }
+  }
+},
+### VLESS NON-TLS $user
+{
+  "inbound": {
+    "port": 80,
+    "protocol": "vless",
+    "settings": {
+      "clients": [{"id": "$uuid","email": "$user"}],
+      "decryption": "none"
+    },
+    "streamSettings": {
+      "network": "ws",
+      "wsSettings": {"path": "/vless"},
+      "security": "none"
+    }
+  }
+},
+EOF
 
-# === QR CODE (TLS SAJA) ===
-qr_path="/etc/xray/qr/vless-${user}.png"
+# === 4. GENERATE LINK VLESS ===
+vless_tls="vless://$uuid@$domain:443?path=/vless&security=tls&encryption=none&type=ws#$user"
+vless_ntls="vless://$uuid@$domain:80?path=/vless&security=none&encryption=none&type=ws#$user"
+
+# === 5. BUAT QR CODE ===
 mkdir -p /etc/xray/qr
-qrencode -o "${qr_path}" "${vless_tls}"
+qrencode -o /etc/xray/qr/$user-vless-tls.png "$vless_tls"
+qrencode -o /etc/xray/qr/$user-vless-ntls.png "$vless_ntls"
 
-# === RESTART XRAY ===
+# === 6. RESTART XRAY ===
 systemctl restart xray
 
-# === AMBIL TOKEN BOT & ID TELE ===
+# === 7. NOTIF TELEGRAM ===
 BOT_TOKEN=$(cat /etc/xydark/bot-token)
 CHAT_ID=$(cat /etc/xydark/owner-id)
 
-# === KIRIM KE TELEGRAM ===
-curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto" \
-  -F chat_id="${CHAT_ID}" \
-  -F photo="@$qr_path" \
-  -F caption="✅ *VLESS WS Created!*
+TEXT="
+🧩 *VLESS WS Created*
 \`\`\`
-Username : $user
-Domain   : $domain
-UUID     : $uuid
-Expired  : $exp
+User   : $user
+Domain : $domain
+UUID   : $uuid
+Expired: $exp
 \`\`\`
-🔐 *TLS*
-\`$vless_tls\`
 
-🌐 *Non-TLS*
-\`$vless_ntls\`
-" -F parse_mode="Markdown"
+🔐 *TLS Link*
+\`\`\`
+$vless_tls
+\`\`\`
 
-# === TAMPILKAN DI TERMINAL ===
+🔓 *Non-TLS Link*
+\`\`\`
+$vless_ntls
+\`\`\`
+"
+
+curl -s -X POST https://api.telegram.org/bot$BOT_TOKEN/sendMessage \
+-d chat_id="$CHAT_ID" \
+-d text="$TEXT" \
+-d parse_mode="Markdown"
+
+# === 8. OUTPUT KE LAYAR ===
 clear
-echo -e "\e[1;36m╔════════════════════════════════════════════╗"
-echo -e "║         BERHASIL BUAT AKUN VLESS          ║"
+echo -e "\e[1;32m╔════════════════════════════════════════════╗"
+echo -e "║        BERHASIL BUAT AKUN VLESS           ║"
 echo -e "╠════════════════════════════════════════════╣"
 echo -e "║ Username : $user"
 echo -e "║ Domain   : $domain"
@@ -118,10 +116,10 @@ echo -e "║ UUID     : $uuid"
 echo -e "║ Expired  : $exp"
 echo -e "╠════════════════════════════════════════════╣"
 echo -e "║ TLS Link     :"
-echo -e "║ $vless_tls"
+echo -e "$vless_tls"
 echo -e "║ Non-TLS Link :"
-echo -e "║ $vless_ntls"
-echo -e "╚════════════════════════════════════════════╝"
-echo -e "✅ Akun berhasil dibuat & dikirim ke Telegram!"
+echo -e "$vless_ntls"
+echo -e "╚════════════════════════════════════════════╝\e[0m"
+
+echo -e "\n✅ Akun VLESS $user berhasil dibuat dan dikirim ke Telegram!"
 read -n 1 -s -r -p "Tekan tombol apapun untuk kembali..."
-menu-xray
