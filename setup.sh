@@ -1,5 +1,5 @@
 #!/bin/bash
-# ====script by ▀▄▀▄XYDARK▄▀▄▀ full auto=====
+# setup.sh by xydark – Full Auto XRAY + Bot + Domain
 
 set -e
 
@@ -24,8 +24,7 @@ mkdir -p /tmp/xray
 curl -Ls -o /tmp/xray/install.sh https://raw.githubusercontent.com/XTLS/Xray-install/main/install-release.sh
 bash /tmp/xray/install.sh install
 
-# Tambah systemd service untuk XRAY
-echo "▶ Konfigurasi service systemd XRAY..."
+# FIX: Buat xray.service jika belum ada
 cat > /etc/systemd/system/xray.service <<EOF
 [Unit]
 Description=XRAY Core Service - by xydark
